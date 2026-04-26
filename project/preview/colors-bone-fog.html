@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Colors · Bone + Fog</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .col h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 10px;text-transform:uppercase;}
+  .row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .sw{display:flex;flex-direction:column;gap:3px;}
+  .chip{height:48px;border-radius:6px;border:1px solid var(--border);}
+  .name{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);}
+  .hex{font-family:var(--font-mono);font-size:9px;color:var(--fg-2);}
+</style></head>
+<body><div class="wrap">
+  <div class="col">
+    <h4>Bone · parchment · text on dark</h4>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:var(--bone-50)"></div><div class="name">bone 50 ★</div><div class="hex">#f5ede3</div></div>
+      <div class="sw"><div class="chip" style="background:var(--bone-100)"></div><div class="name">bone 100</div><div class="hex">#ece1d2</div></div>
+      <div class="sw"><div class="chip" style="background:var(--bone-200)"></div><div class="name">bone 200</div><div class="hex">#d9ccb9</div></div>
+      <div class="sw"><div class="chip" style="background:var(--bone-300)"></div><div class="name">bone 300</div><div class="hex">#bdad97</div></div>
+      <div class="sw"><div class="chip" style="background:var(--bone-400)"></div><div class="name">bone 400</div><div class="hex">#8f8275</div></div>
+    </div>
+  </div>
+  <div class="col">
+    <h4>Fog · mist grey · secondary surfaces</h4>
+    <div class="row">
+      <div class="sw"><div class="chip" style="background:var(--fog-900)"></div><div class="name">fog 900</div><div class="hex">#20252a</div></div>
+      <div class="sw"><div class="chip" style="background:var(--fog-700)"></div><div class="name">fog 700</div><div class="hex">#3b434b</div></div>
+      <div class="sw"><div class="chip" style="background:var(--fog-500)"></div><div class="name">fog 500</div><div class="hex">#6b7580</div></div>
+      <div class="sw"><div class="chip" style="background:var(--fog-300)"></div><div class="name">fog 300</div><div class="hex">#9ea7b0</div></div>
+      <div class="sw"><div class="chip" style="background:var(--fog-100)"></div><div class="name">fog 100</div><div class="hex">#cdd3d9</div></div>
+    </div>
+  </div>
+</div></body></html>

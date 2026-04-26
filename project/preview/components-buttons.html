@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:24px 28px;display:flex;flex-direction:column;gap:16px;}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--fg-3);text-transform:uppercase;width:110px;}
+  .btn{font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.18em;text-transform:uppercase;padding:11px 22px;border-radius:4px;cursor:pointer;border:1px solid transparent;transition:all var(--dur-fast) var(--ease-out);color:var(--fg-1);background:transparent;}
+  .btn.primary{background:var(--crimson-600);border-color:var(--crimson-700);color:var(--bone-50);box-shadow:var(--glow-crimson-sm),var(--shadow-inset);}
+  .btn.primary:hover{background:var(--crimson-500);box-shadow:var(--glow-crimson-md);}
+  .btn.ghost{border-color:var(--border-strong);color:var(--fg-1);}
+  .btn.ghost:hover{border-color:var(--ember-500);color:var(--ember-400);box-shadow:var(--glow-ember-sm);}
+  .btn.gold{background:transparent;border:1px solid var(--ember-700);color:var(--ember-400);}
+  .btn.gold:hover{background:var(--ember-900);box-shadow:var(--glow-ember-sm);}
+  .btn.pill{border-radius:999px;}
+  .btn.sm{font-size:10px;padding:7px 14px;}
+  .btn.lg{font-size:14px;padding:14px 30px;}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0;text-transform:uppercase;}
+</style></head>
+<body><div class="wrap">
+<h4>Buttons</h4>
+<div class="row"><div class="label">primary</div>
+  <button class="btn primary sm">Draw Blade</button>
+  <button class="btn primary">Draw Blade</button>
+  <button class="btn primary lg">Draw Blade</button>
+</div>
+<div class="row"><div class="label">ghost</div>
+  <button class="btn ghost sm">Observe</button>
+  <button class="btn ghost">Observe</button>
+  <button class="btn ghost pill">Observe ⛩</button>
+</div>
+<div class="row"><div class="label">gold</div>
+  <button class="btn gold sm">Codex</button>
+  <button class="btn gold">Enter Codex</button>
+  <button class="btn gold pill">影 · Read Rune</button>
+</div>
+</div></body></html>

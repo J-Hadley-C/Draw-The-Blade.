@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Colors · Crimson</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:20px 24px;}
+  .row{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;}
+  .sw{display:flex;flex-direction:column;gap:4px;}
+  .chip{height:56px;border-radius:8px;border:1px solid var(--border);}
+  .chip.hot{box-shadow:var(--glow-crimson-sm);}
+  .name{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);}
+  .hex{font-family:var(--font-mono);font-size:10px;color:var(--fg-2);}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 10px;text-transform:uppercase;}
+</style></head>
+<body><div class="wrap">
+<h4>Crimson · Oxidized blood · <span style="color:var(--crimson-500)">primary accent</span></h4>
+<div class="row">
+  <div class="sw"><div class="chip" style="background:var(--crimson-950)"></div><div class="name">950</div><div class="hex">#1c0405</div></div>
+  <div class="sw"><div class="chip" style="background:var(--crimson-900)"></div><div class="name">900</div><div class="hex">#360509</div></div>
+  <div class="sw"><div class="chip" style="background:var(--crimson-800)"></div><div class="name">800</div><div class="hex">#520a0f</div></div>
+  <div class="sw"><div class="chip" style="background:var(--crimson-700)"></div><div class="name">700</div><div class="hex">#7a0f16</div></div>
+  <div class="sw"><div class="chip hot" style="background:var(--crimson-600)"></div><div class="name">600 ★</div><div class="hex">#a3161f</div></div>
+  <div class="sw"><div class="chip hot" style="background:var(--crimson-500)"></div><div class="name">500</div><div class="hex">#c71f29</div></div>
+  <div class="sw"><div class="chip hot" style="background:var(--crimson-400)"></div><div class="name">400</div><div class="hex">#e04651</div></div>
+  <div class="sw"><div class="chip" style="background:var(--crimson-300)"></div><div class="name">300</div><div class="hex">#f07a83</div></div>
+</div>
+</div></body></html>

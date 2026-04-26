@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Shadows + Glows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:28px 28px;}
+  .row{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;}
+  .sw{display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .box{width:80px;height:56px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;}
+  .nm{font-family:var(--font-mono);font-size:10px;color:var(--fg-2);letter-spacing:.1em;}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 18px;text-transform:uppercase;}
+</style></head>
+<body><div class="wrap">
+<h4>Shadows · inky drops + signature glows</h4>
+<div class="row">
+  <div class="sw"><div class="box" style="box-shadow:var(--shadow-sm)"></div><div class="nm">shadow-sm</div></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--shadow-md)"></div><div class="nm">shadow-md</div></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--shadow-lg)"></div><div class="nm">shadow-lg</div></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--glow-crimson-md);border-color:var(--border-hot)"></div><div class="nm">glow-crimson</div></div>
+  <div class="sw"><div class="box" style="box-shadow:var(--glow-ember-md);border-color:var(--border-gold)"></div><div class="nm">glow-ember</div></div>
+</div>
+</div></body></html>

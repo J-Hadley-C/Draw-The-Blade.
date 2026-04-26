@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"c:\\\\Users\\\\MuSaShY\\\\Desktop\\\\DEVELOPPEMENT\\\\LE STYLE CSS\\\\ROTATION_3D\\\\Nouveau dossier \\(3\\)\\\\draw-the-blade\\\\project\\\\ui_kits\\\\showcase\\\\index.html\")",
+      "Bash(start \"c:\\\\Users\\\\MuSaShY\\\\Desktop\\\\DEVELOPPEMENT\\\\LE STYLE CSS\\\\ROTATION_3D\\\\Nouveau dossier \\(3\\)\\\\draw-the-blade\\\\project\\\\ui_kits\\\\codex\\\\index.html\")"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Image tile</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:20px 24px;display:flex;gap:24px;align-items:flex-start;}
+  .tile{width:150px;}
+  .frame{width:150px;height:220px;border-radius:15px;border:4px double #000;object-fit:cover;display:block;-webkit-box-reflect: below 2px linear-gradient(transparent, transparent, rgba(4, 4, 4, 0.267));}
+  .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--fg-3);margin-top:10px;text-transform:uppercase;}
+  .name{font-family:var(--font-display);font-weight:600;font-size:13px;letter-spacing:.12em;color:var(--fg-1);margin-top:3px;text-transform:uppercase;}
+  .tile.hot .frame{box-shadow:var(--glow-crimson-md);}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 4px;text-transform:uppercase;width:100%;}
+</style></head>
+<body><div class="wrap">
+<h4 style="flex-basis:100%">Image tile · signature double-border + reflection</h4>
+<div class="tile"><img class="frame" src="../assets/images/1.png" alt=""><div class="label">no.01 · oracle</div><div class="name">Rune Sibyl</div></div>
+<div class="tile"><img class="frame" src="../assets/images/4.png" alt=""><div class="label">no.04 · mystic</div><div class="name">Ember Mendicant</div></div>
+<div class="tile hot"><img class="frame" src="../assets/images/6.jpg" alt=""><div class="label">no.06 · selected</div><div class="name">Bone Shinobi</div></div>
+<div class="tile"><img class="frame" src="../assets/images/12.jpg" alt=""><div class="label">no.12 · ronin</div><div class="name">Paper Hat Ronin</div></div>
+</div></body></html>

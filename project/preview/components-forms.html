@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Form controls</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:24px 28px;display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  label{display:flex;flex-direction:column;gap:6px;}
+  .lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--fg-3);text-transform:uppercase;}
+  input,select,textarea{font-family:var(--font-sans);font-size:14px;padding:10px 12px;background:var(--ink-950);border:1px solid var(--border);border-radius:8px;color:var(--fg-1);transition:all var(--dur-fast) var(--ease-out);}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--crimson-600);box-shadow:var(--glow-crimson-sm);}
+  .check{display:flex;align-items:center;gap:10px;color:var(--fg-2);font-family:var(--font-sans);font-size:14px;}
+  .box{width:18px;height:18px;border:1px solid var(--border-strong);border-radius:4px;display:grid;place-items:center;background:var(--ink-950);}
+  .box.checked{background:var(--crimson-600);border-color:var(--crimson-500);box-shadow:var(--glow-crimson-sm);}
+  .box.checked::after{content:"";width:6px;height:10px;border:solid var(--bone-50);border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-2px;}
+  .swatch{display:flex;gap:6px;}
+  .dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--border-strong);cursor:pointer;}
+  .dot.on{box-shadow:0 0 0 2px var(--crimson-500);}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 0;text-transform:uppercase;grid-column:1/-1;}
+</style></head>
+<body><div class="wrap">
+<h4>Form controls</h4>
+<label><span class="lbl">figure name</span><input value="The Ember Mendicant"></label>
+<label><span class="lbl">clan</span>
+  <select><option>Shinobi</option><option>Oni</option><option>Ronin</option></select>
+</label>
+<label><span class="lbl">inscription</span><textarea rows="2">Forged in crimson. Bound in bone.</textarea></label>
+<div style="display:flex;flex-direction:column;gap:10px;">
+  <div class="check"><div class="box checked"></div>Hover to pause rotation</div>
+  <div class="check"><div class="box"></div>Autoplay on load</div>
+  <div style="display:flex;flex-direction:column;gap:6px;"><span class="lbl">tile frame</span>
+    <div class="swatch"><div class="dot on" style="background:var(--ink-950)"></div><div class="dot" style="background:var(--crimson-700)"></div><div class="dot" style="background:var(--ember-700)"></div><div class="dot" style="background:var(--bone-200)"></div></div>
+  </div>
+</div>
+</div></body></html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .card{background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow-md),var(--shadow-inset);display:flex;flex-direction:column;gap:8px;}
+  .card.hot{border-color:var(--border-hot);box-shadow:var(--glow-crimson-md),var(--shadow-inset);}
+  .eye{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;color:var(--ember-400);text-transform:uppercase;}
+  .title{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:.08em;color:var(--fg-1);text-transform:uppercase;}
+  .body{font-family:var(--font-sans);font-size:13px;line-height:1.6;color:var(--fg-2);}
+  .meta{font-family:var(--font-mono);font-size:10px;color:var(--fg-3);display:flex;gap:10px;border-top:1px solid var(--border);padding-top:10px;margin-top:4px;}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0;text-transform:uppercase;grid-column:1/-1;}
+</style></head>
+<body><div class="wrap">
+<h4>Cards · default + selected</h4>
+<div class="card">
+  <div class="eye">⛩ chapter i</div>
+  <div class="title">The Entrance</div>
+  <div class="body">Ten figures circle the blade. Each panel is shown only in passing, only at an angle — the rotation holds them just long enough to name them.</div>
+  <div class="meta"><span>no. 01 / 11</span><span>·</span><span>4m read</span></div>
+</div>
+<div class="card hot">
+  <div class="eye" style="color:var(--crimson-400)">✦ selected</div>
+  <div class="title">The Reflection</div>
+  <div class="body">Below each tile, a soft mirror pools in the ink. Two pixels of gap, then fade — the reflection is the thing the system is most known for.</div>
+  <div class="meta"><span>no. 02 / 11</span><span>·</span><span>3m read</span></div>
+</div>
+</div></body></html>

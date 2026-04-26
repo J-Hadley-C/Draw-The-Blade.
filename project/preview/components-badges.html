@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Badges + Chips</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:24px 28px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .label{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--fg-3);text-transform:uppercase;width:90px;}
+  .b{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;padding:4px 10px;border-radius:999px;border:1px solid var(--border);text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;}
+  .b.hot{color:var(--crimson-400);border-color:var(--border-hot);background:rgba(199,31,41,0.1);}
+  .b.gold{color:var(--ember-400);border-color:var(--ember-700);background:rgba(224,150,32,0.08);}
+  .b.bone{color:var(--fg-1);border-color:var(--border-strong);background:var(--bg-panel);}
+  .b.ghost{color:var(--fg-3);}
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .dot.hot{background:var(--crimson-400);box-shadow:var(--glow-crimson-sm);}
+  .dot.gold{background:var(--ember-400);box-shadow:var(--glow-ember-sm);}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0;text-transform:uppercase;}
+</style></head>
+<body><div class="wrap">
+<h4>Badges + chips</h4>
+<div class="row"><div class="label">clan</div>
+  <span class="b hot"><span class="dot hot"></span>shinobi</span>
+  <span class="b gold"><span class="dot gold"></span>oni</span>
+  <span class="b bone">ronin</span>
+  <span class="b ghost">civilian</span>
+</div>
+<div class="row"><div class="label">status</div>
+  <span class="b hot">live · rotating</span>
+  <span class="b gold">paused</span>
+  <span class="b ghost">archived</span>
+</div>
+<div class="row"><div class="label">rune tag</div>
+  <span class="b gold">影 shadow</span>
+  <span class="b gold">刃 blade</span>
+  <span class="b gold">道 way</span>
+  <span class="b gold">剣 sword</span>
+</div>
+</div></body></html>

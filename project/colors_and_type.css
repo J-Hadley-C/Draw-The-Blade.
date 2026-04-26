@@ -1,0 +1,255 @@
+/* =========================================================
+   DOJO SABRE — Colors & Type
+   Neo-samurai / shinobi cinematic visual language.
+   Imported by every preview, UI kit and artifact.
+   ========================================================= */
+
+/* ---------- Fonts --------------------------------------- */
+/*
+  Primary display: Cinzel — tall, roman-carved, ceremonial
+  Headline / UI: Noto Serif JP — bilingual, supports kanji
+  Body / UI: Inter — clean neutral sans for metadata
+  Mono / rune: JetBrains Mono — terminal / code / tag feel
+  Brush kanji: Yuji Mai — handwritten brush kanji accent
+*/
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Noto+Serif+JP:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Yuji+Mai&display=swap');
+
+:root {
+  /* ============ BASE PALETTE ============================
+     Ink-black foundations with oxidized-blood crimson and
+     forge-ember gold. Pulled from dojosabre.jpg (torii
+     gate, red maples) and fire-cloak portraits.            */
+
+  /* Ink — deep blacks, warmed slightly */
+  --ink-950: #070506;   /* void / deepest background */
+  --ink-900: #0d0a0b;   /* page background */
+  --ink-850: #141011;   /* panel */
+  --ink-800: #1a1517;   /* raised panel */
+  --ink-700: #241d1f;   /* card */
+  --ink-600: #332a2c;   /* border-strong */
+  --ink-500: #4a3e41;   /* muted line */
+  --ink-400: #6b5c5f;   /* disabled */
+
+  /* Bone — off-white / paper tones */
+  --bone-50: #f5ede3;   /* parchment */
+  --bone-100: #ece1d2;
+  --bone-200: #d9ccb9;
+  --bone-300: #bdad97;
+  --bone-400: #8f8275;
+
+  /* Crimson — oxidized blood, torii gate lacquer */
+  --crimson-950: #1c0405;
+  --crimson-900: #360509;
+  --crimson-800: #520a0f;
+  --crimson-700: #7a0f16;
+  --crimson-600: #a3161f;  /* primary accent */
+  --crimson-500: #c71f29;  /* hot press */
+  --crimson-400: #e04651;  /* glow / on-hover */
+  --crimson-300: #f07a83;
+
+  /* Ember — forge gold, runic glow */
+  --ember-900: #3d2505;
+  --ember-800: #6b400a;
+  --ember-700: #9a5e10;
+  --ember-600: #c47c16;
+  --ember-500: #e09620;  /* primary gold */
+  --ember-400: #f4b44a;  /* glow gold */
+  --ember-300: #ffd488;
+  --ember-200: #ffe6b0;
+
+  /* Fog — cool grey for misty backgrounds (images 3, 5, 12) */
+  --fog-900: #20252a;
+  --fog-700: #3b434b;
+  --fog-500: #6b7580;
+  --fog-300: #9ea7b0;
+  --fog-100: #cdd3d9;
+
+  /* ============ SEMANTIC TOKENS ======================== */
+  --bg: var(--ink-900);
+  --bg-deep: var(--ink-950);
+  --bg-panel: var(--ink-850);
+  --bg-raised: var(--ink-800);
+  --bg-card: var(--ink-700);
+
+  --fg: var(--bone-50);
+  --fg-1: var(--bone-50);    /* primary text */
+  --fg-2: var(--bone-200);   /* secondary */
+  --fg-3: var(--bone-400);   /* tertiary / caption */
+  --fg-dim: var(--ink-400);  /* disabled / meta */
+
+  --accent: var(--crimson-600);
+  --accent-hot: var(--crimson-500);
+  --accent-glow: var(--crimson-400);
+  --gold: var(--ember-500);
+  --gold-glow: var(--ember-400);
+
+  --border: var(--ink-600);
+  --border-strong: var(--ink-500);
+  --border-hot: var(--crimson-700);
+  --border-gold: var(--ember-700);
+
+  --rune: var(--ember-400);      /* runic / code accent */
+  --rune-dim: var(--ember-700);
+
+  /* ============ RADII ================================== */
+  --r-0: 0;
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 8px;
+  --r-4: 12px;
+  --r-5: 16px;       /* card default */
+  --r-6: 24px;
+  --r-pill: 999px;
+
+  /* ============ SPACING ================================= */
+  --s-0: 0;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  /* ============ SHADOWS & GLOWS ========================
+     Dojo Sabre uses outer glows (ember / crimson) more than
+     soft drop shadows. Drop shadows are dense and inky.  */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.6);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.7);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.8);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.6);
+
+  --glow-crimson-sm: 0 0 12px rgba(224,70,81,0.35);
+  --glow-crimson-md: 0 0 24px rgba(224,70,81,0.5), 0 0 48px rgba(199,31,41,0.25);
+  --glow-crimson-lg: 0 0 40px rgba(224,70,81,0.6), 0 0 96px rgba(199,31,41,0.35);
+
+  --glow-ember-sm: 0 0 12px rgba(244,180,74,0.35);
+  --glow-ember-md: 0 0 24px rgba(244,180,74,0.5), 0 0 60px rgba(224,150,32,0.3);
+  --glow-ember-lg: 0 0 48px rgba(244,180,74,0.65), 0 0 120px rgba(224,150,32,0.35);
+
+  /* ============ TYPOGRAPHY TOKENS ======================= */
+  --font-display: 'Cinzel', 'Noto Serif JP', serif;
+  --font-serif: 'Noto Serif JP', 'Cinzel', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --font-brush: 'Yuji Mai', 'Noto Serif JP', serif;
+
+  /* ============ MOTION ================================== */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-blade: cubic-bezier(0.16, 1, 0.3, 1);  /* slow unsheath */
+  --dur-fast: 140ms;
+  --dur-med: 280ms;
+  --dur-slow: 600ms;
+  --dur-ceremony: 1200ms;
+}
+
+/* =========================================================
+   SEMANTIC ELEMENT STYLES
+   ========================================================= */
+
+.ds-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.ds-h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 72px);
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--fg-1);
+}
+
+.ds-h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(28px, 3.5vw, 42px);
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: var(--fg-1);
+}
+
+.ds-h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--fg-1);
+}
+
+.ds-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--rune);
+}
+
+.ds-p {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--fg-2);
+}
+
+.ds-p-lg {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.ds-caption {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.ds-code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--rune);
+  background: var(--ink-950);
+  padding: 2px 6px;
+  border-radius: var(--r-2);
+  border: 1px solid var(--border);
+}
+
+.ds-kanji {
+  font-family: var(--font-brush);
+  font-weight: 400;
+  color: var(--crimson-500);
+  line-height: 1;
+}
+
+/* =========================================================
+   RESET + BASE for previews
+   ========================================================= */
+.ds-base {
+  background: var(--bg);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ds-base *, .ds-base *::before, .ds-base *::after {
+  box-sizing: border-box;
+}

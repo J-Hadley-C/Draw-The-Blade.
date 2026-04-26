@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Hero background</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .hero{position:relative;height:280px;background:url(../assets/images/dojosabre.jpg) center/cover no-repeat;border-radius:12px;margin:10px;overflow:hidden;display:grid;place-items:center;}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 10%, rgba(7,5,6,0.85) 85%);}
+  .inner{position:relative;z-index:1;text-align:center;color:var(--fg-1);}
+  .eye{font-family:var(--font-mono);font-size:11px;letter-spacing:.28em;color:var(--ember-400);text-transform:uppercase;text-shadow:var(--glow-ember-sm);}
+  .t{font-family:var(--font-display);font-weight:900;font-size:44px;letter-spacing:.1em;text-transform:uppercase;margin:8px 0 0;text-shadow:0 2px 20px rgba(0,0,0,.8);}
+  .k{font-family:var(--font-brush);font-size:22px;color:var(--crimson-400);margin-top:6px;}
+</style></head>
+<body>
+<div class="hero"><div class="inner">
+  <div class="eye">⛩ dojo sabre · chapter i</div>
+  <div class="t">Draw The Blade</div>
+  <div class="k">道場 剣</div>
+</div></div>
+</body></html>

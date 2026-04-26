@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Colors · Ember</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{padding:20px 24px;}
+  .row{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;}
+  .sw{display:flex;flex-direction:column;gap:4px;}
+  .chip{height:56px;border-radius:8px;border:1px solid var(--border);}
+  .chip.glow{box-shadow:var(--glow-ember-sm);}
+  .name{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--fg-3);}
+  .hex{font-family:var(--font-mono);font-size:10px;color:var(--fg-2);}
+  h4{font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.22em;color:var(--fg-2);margin:0 0 10px;text-transform:uppercase;}
+</style></head>
+<body><div class="wrap">
+<h4>Ember · Forge gold · <span style="color:var(--ember-400)">runic accent</span></h4>
+<div class="row">
+  <div class="sw"><div class="chip" style="background:var(--ember-900)"></div><div class="name">900</div><div class="hex">#3d2505</div></div>
+  <div class="sw"><div class="chip" style="background:var(--ember-800)"></div><div class="name">800</div><div class="hex">#6b400a</div></div>
+  <div class="sw"><div class="chip" style="background:var(--ember-700)"></div><div class="name">700</div><div class="hex">#9a5e10</div></div>
+  <div class="sw"><div class="chip glow" style="background:var(--ember-600)"></div><div class="name">600</div><div class="hex">#c47c16</div></div>
+  <div class="sw"><div class="chip glow" style="background:var(--ember-500)"></div><div class="name">500 ★</div><div class="hex">#e09620</div></div>
+  <div class="sw"><div class="chip glow" style="background:var(--ember-400)"></div><div class="name">400</div><div class="hex">#f4b44a</div></div>
+  <div class="sw"><div class="chip" style="background:var(--ember-300)"></div><div class="name">300</div><div class="hex">#ffd488</div></div>
+  <div class="sw"><div class="chip" style="background:var(--ember-200)"></div><div class="name">200</div><div class="hex">#ffe6b0</div></div>
+</div>
+</div></body></html>

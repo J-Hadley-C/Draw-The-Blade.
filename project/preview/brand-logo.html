@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><title>Brand · Logo</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html,body{margin:0;background:var(--ink-900);height:100%;}
+  .wrap{display:flex;align-items:center;justify-content:center;height:100%;padding:24px;gap:40px;}
+  .lockup{display:inline-flex;flex-direction:column;align-items:center;gap:8px;color:var(--fg-1);}
+  .rule{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--ember-500),transparent);}
+  .word{font-family:var(--font-display);font-weight:900;font-size:36px;letter-spacing:.28em;padding-left:.28em;line-height:1;}
+  .kana{font-family:var(--font-brush);font-size:20px;letter-spacing:.2em;color:var(--crimson-500);padding-left:.2em;line-height:1;}
+  .small .word{font-size:18px;}
+  .small .kana{font-size:11px;}
+  .on-bone{background:var(--bone-50);padding:20px 28px;border-radius:8px;}
+  .on-bone .word{color:var(--ink-900);}
+  .on-bone .kana{color:var(--crimson-700);}
+  .on-bone .rule{background:linear-gradient(90deg,transparent,var(--crimson-700),transparent);}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="lockup">
+    <div class="rule"></div>
+    <div class="word">DOJO SABRE</div>
+    <div class="kana">道場 剣</div>
+    <div class="rule"></div>
+  </div>
+  <div class="lockup small">
+    <div class="rule"></div>
+    <div class="word">DOJO SABRE</div>
+    <div class="kana">道場 剣</div>
+    <div class="rule"></div>
+  </div>
+  <div class="on-bone"><div class="lockup">
+    <div class="rule"></div>
+    <div class="word">DOJO SABRE</div>
+    <div class="kana">道場 剣</div>
+    <div class="rule"></div>
+  </div></div>
+</div>
+</body></html>
