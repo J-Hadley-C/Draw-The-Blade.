@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dojo Sabre — Wordmark</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; background: var(--ink-900); }
+  .wordmark {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 28px;
+    color: var(--fg-1);
+  }
+  .wordmark .rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--ember-500), transparent);
+  }
+  .wordmark .word {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 36px;
+    letter-spacing: 0.28em;
+    padding-left: 0.28em; /* optical compensation for tracking */
+    line-height: 1;
+  }
+  .wordmark .kana {
+    font-family: var(--font-brush);
+    font-size: 20px;
+    letter-spacing: 0.2em;
+    color: var(--crimson-500);
+    padding-left: 0.2em;
+    line-height: 1;
+  }
+  /* stage */
+  .stage {
+    display: grid;
+    place-items: center;
+    min-height: 160px;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="wordmark">
+      <div class="rule"></div>
+      <div class="word">DOJO SABRE</div>
+      <div class="kana">道場 剣</div>
+      <div class="rule"></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dojo Sabre · Codex</title>
+<title>Khen Fu · Catalogue</title>
 <link rel="stylesheet" href="../../colors_and_type.css">
 <style>
-  html, body { margin: 0; padding: 0; background: var(--ink-900);
-    color: var(--fg-1); height: 100%; }
+  html, body { margin: 0; padding: 0; background: var(--ink-900); color: var(--fg-1); height: 100%; }
   body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   #root { display: flex; flex-direction: column; min-height: 100vh; }
   .app-body { display: flex; flex: 1; min-height: 0; }
@@ -17,9 +16,11 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
 <body>
-<div id="root" data-screen-label="Codex · Figure Index"></div>
+<div id="root"></div>
 
+<script src="../beatData.js"></script>
 <script src="codexData.js"></script>
+<script type="text/babel" src="../AudioPlayer.jsx"></script>
 <script type="text/babel" src="CodexNav.jsx"></script>
 <script type="text/babel" src="Sidebar.jsx"></script>
 <script type="text/babel" src="FigureGrid.jsx"></script>
@@ -27,19 +28,50 @@
 
 <script type="text/babel">
   const App = () => {
-    const [clan, setClan] = React.useState('All');
-    const [selected, setSelected] = React.useState(window.CODEX_FIGURES[3]);
+    const [genre, setGenre]       = React.useState('All');
+    const [search, setSearch]     = React.useState('');
+    const [selected, setSelected] = React.useState(window.BEATS[3]);
+    const [playing, setPlaying]   = React.useState(null);
+
+    // Filtre beats par genre + recherche texte
+    const filtered = React.useMemo(() => {
+      let list = window.BEATS;
+      if (genre !== 'All') list = list.filter(b => b.genre === genre);
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        list = list.filter(b =>
+          b.title.toLowerCase().includes(q) ||
+          b.genre.toLowerCase().includes(q) ||
+          String(b.bpm).includes(q) ||
+          b.key.toLowerCase().includes(q)
+        );
+      }
+      return list;
+    }, [genre, search]);
+
     return (
       <>
-        <CodexNav />
+        <CodexNav search={search} setSearch={setSearch} />
         <div className="app-body">
-          <Sidebar clan={clan} setClan={setClan} />
-          <FigureGrid clan={clan} selected={selected} setSelected={setSelected} />
-          <FigureDetail figure={selected} onClose={() => setSelected(null)} />
+          <Sidebar genre={genre} setGenre={setGenre} />
+          <FigureGrid
+            genre={genre}
+            beats={filtered}
+            selected={selected}
+            setSelected={setSelected}
+            setPlaying={setPlaying}
+          />
+          <FigureDetail
+            figure={selected}
+            onClose={() => setSelected(null)}
+            setPlaying={setPlaying}
+          />
         </div>
+        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} />
       </>
     );
   };
+
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>

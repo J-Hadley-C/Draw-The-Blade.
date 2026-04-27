@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dojo Sabre · Showcase</title>
+<title>Khen Fu · Showcase</title>
 <link rel="stylesheet" href="../../colors_and_type.css">
 <style>
   html, body { margin: 0; padding: 0; background: var(--ink-900); color: var(--fg-1); }
@@ -15,8 +15,10 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
 <body>
-<div id="root" data-screen-label="Showcase · Landing"></div>
+<div id="root"></div>
 
+<script src="../beatData.js"></script>
+<script type="text/babel" src="../AudioPlayer.jsx"></script>
 <script type="text/babel" src="Carousel3D.jsx"></script>
 <script type="text/babel" src="Nav.jsx"></script>
 <script type="text/babel" src="Hero.jsx"></script>
@@ -24,14 +26,24 @@
 <script type="text/babel" src="Footer.jsx"></script>
 
 <script type="text/babel">
-  const App = () => (
-    <>
-      <Nav active="showcase" />
-      <Hero />
-      <FigureRail />
-      <Footer />
-    </>
-  );
+  const App = () => {
+    const [playing, setPlaying] = React.useState(null);
+    const [beats, setBeats] = React.useState([]);
+
+    React.useEffect(() => {
+      window.loadBeats().then(setBeats).catch(console.error);
+    }, []);
+
+    return (
+      <>
+        <Nav active="showcase" />
+        <Hero setPlaying={setPlaying} beats={beats} />
+        <FigureRail setPlaying={setPlaying} beats={beats} />
+        <Footer />
+        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} />
+      </>
+    );
+  };
   ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>

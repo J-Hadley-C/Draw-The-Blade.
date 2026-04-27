@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khen Fu · Admin</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink-950); color: var(--fg-1); }
+  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  #root { min-height: 100vh; }
+
+  input, select, textarea {
+    background: var(--ink-800); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--fg-1);
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 9px 12px; width: 100%; outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--crimson-500); }
+  select option { background: var(--ink-900); }
+  textarea { resize: vertical; min-height: 72px; }
+
+  /* Toggle */
+  .tog { display:flex; align-items:center; gap:10px; cursor:pointer; -webkit-user-select:none; user-select:none; }
+  .tog-box { position:relative; width:38px; height:20px; flex-shrink:0; }
+  .tog-box input { opacity:0; width:0; height:0; position:absolute; }
+  .tog-track { position:absolute; inset:0; background:var(--ink-700); border-radius:99px; border:1px solid var(--border); transition:background .2s; }
+  .tog-box input:checked + .tog-track { background:var(--crimson-600); border-color:var(--crimson-700); }
+  .tog-thumb { position:absolute; top:2px; left:2px; width:14px; height:14px; background:var(--fg-3); border-radius:50%; transition:transform .2s, background .2s; pointer-events:none; }
+  .tog-box input:checked ~ .tog-thumb { transform:translateX(18px); background:#fff; }
+
+  /* DropZone */
+  .dz { border:1px dashed var(--border-strong); border-radius:8px; padding:18px 12px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s; background:var(--ink-900); }
+  .dz:hover, .dz.over { border-color:var(--crimson-500); background:rgba(163,22,31,.06); }
+  .dz input { display:none; }
+
+  /* Drawer */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:100; animation:fi .15s; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:500px; max-width:100vw; background:var(--ink-900); border-left:1px solid var(--border); z-index:101; overflow-y:auto; padding:28px 28px 100px; animation:si .2s; box-shadow:-8px 0 40px rgba(0,0,0,.7); }
+  @keyframes fi { from{opacity:0} to{opacity:1} }
+  @keyframes si { from{transform:translateX(100%)} to{transform:translateX(0)} }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink-800); border:1px solid var(--border-hot); color:var(--fg-1); font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:12px 22px; border-radius:6px; z-index:300; box-shadow:var(--glow-crimson-sm); animation:toast-in .2s; white-space:nowrap; }
+  .toast.err { border-color:var(--crimson-500); color:var(--crimson-400); }
+  @keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+  /* Drag row */
+  tr.drag-over td { border-top:2px solid var(--crimson-500) !important; }
+  tr.dragging { opacity:.4; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const API      = 'http://127.0.0.1:8000/api/beats';
+const UPLOADS  = 'http://127.0.0.1:8000/uploads/beats';
+const GENRES   = ['Trap','Drill','SexyDrill','BB','R&B','Afrobeat','Kompa'];
+const GC = { Trap:'#a3161f', Drill:'#7c1d6f', SexyDrill:'#c0185e', BB:'#1a5c3a', 'R&B':'#1a3a6b', Afrobeat:'#7a4a00', Kompa:'#0a4a6b' };
+
+// Résoudre l'URL de la cover
+function imgSrc(beat) {
+  if (!beat.imagePath) return null;
+  // images fixtures : "1.png", "3.jpg", etc.
+  if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
+  // images uploadées : stockées dans uploads/beats/
+  return `${UPLOADS}/${beat.imagePath}`;
+}
+
+// ---------- Toggle ----------
+const Toggle = ({ checked, onChange, label }) => (
+  <label className="tog">
+    <span className="tog-box">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <span className="tog-track" /><span className="tog-thumb" />
+    </span>
+    {label && <span style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--fg-2)'}}>{label}</span>}
+  </label>
+);
+
+// ---------- DropZone ----------
+const DropZone = ({ label, accept, file, onFile, preview }) => {
+  const [drag, setDrag] = React.useState(false);
+  const ref = React.useRef();
+  return (
+    <div className={'dz'+(drag?' over':'')}
+      onClick={() => ref.current.click()}
+      onDragOver={e=>{e.preventDefault();setDrag(true)}}
+      onDragLeave={()=>setDrag(false)}
+      onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(f)onFile(f);}}>
+      <input ref={ref} type="file" accept={accept} onChange={e=>{if(e.target.files[0])onFile(e.target.files[0]);e.target.value='';}} />
+      {preview && <img src={preview} style={{maxHeight:80,borderRadius:6,objectFit:'cover',marginBottom:6,display:'block',marginInline:'auto'}} alt="" />}
+      {file && !preview && <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',marginBottom:4}}>✓ {file.name}</div>}
+      <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'var(--fg-3)'}}>
+        {(file||preview)?'Changer':label}
+      </div>
+    </div>
+  );
+};
+
+// ---------- Toast ----------
+const Toast = ({ msg, err, onDone }) => {
+  React.useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t);},[]);
+  return <div className={'toast'+(err?' err':'')}>{msg}</div>;
+};
+
+// ---------- BeatForm ----------
+const EMPTY = { title:'', genre:'Trap', bpm:'', key:'', duration:'', description:'', price:'', isFree:false, inCarousel:false };
+
+const BeatForm = ({ beat, onClose, onSaved }) => {
+  const isEdit = !!beat;
+  const [form, setForm] = React.useState(isEdit ? {
+    title:beat.title, genre:beat.genre, bpm:String(beat.bpm),
+    key:beat.keySignature, duration:beat.duration, description:beat.description,
+    price:String(beat.price), isFree:beat.isFree, inCarousel:beat.inCarousel,
+  } : {...EMPTY});
+
+  const [coverFile, setCoverFile] = React.useState(null);
+  const [audioFile, setAudioFile] = React.useState(null);
+  const [saving, setSaving]       = React.useState(false);
+  const [prevImg, setPrevImg]     = React.useState(isEdit ? imgSrc(beat) : null);
+
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
+
+  const submit = async e => {
+    e.preventDefault(); setSaving(true);
+    try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k,v]) => fd.append(k, v));
+      if (coverFile) fd.append('coverImage', coverFile);
+      if (audioFile) fd.append('audioFile', audioFile);
+      const url = isEdit ? `${API}/${beat.id}` : API;
+      const res = await fetch(url, { method:'POST', body:fd });
+      if (!res.ok) throw new Error(await res.text());
+      onSaved(await res.json(), isEdit);
+    } catch(err) {
+      alert('Erreur : ' + err.message);
+    } finally { setSaving(false); }
+  };
+
+  const F = ({lbl,k,type='text',ph=''}) => (
+    <div style={{display:'flex',flexDirection:'column',gap:5,flex:1}}>
+      <label style={S.lbl}>{lbl}</label>
+      <input type={type} value={form[k]} placeholder={ph} onChange={e=>set(k,e.target.value)}
+        required={['title','bpm','key','duration','price'].includes(k)} />
+    </div>
+  );
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} />
+      <div className="drawer">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+          <div>
+            <div style={S.eye}>{isEdit?'✏ modifier':'+ nouveau beat'}</div>
+            <h2 style={S.h2}>{isEdit?beat.title:'Ajouter un beat'}</h2>
+          </div>
+          <button onClick={onClose} style={S.xbtn}>✕</button>
+        </div>
+
+        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:14}}>
+          <F lbl="Titre" k="title" ph="Ex: Night Runner" />
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
+              <label style={S.lbl}>Genre</label>
+              <select value={form.genre} onChange={e=>set('genre',e.target.value)}>
+                {GENRES.map(g=><option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <F lbl="BPM" k="bpm" type="number" ph="140" />
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <F lbl="Tonalité" k="key" ph="Am" />
+            <F lbl="Durée" k="duration" ph="3:24" />
+          </div>
+
+          <div style={{display:'flex',flexDirection:'column',gap:5}}>
+            <label style={S.lbl}>Description</label>
+            <textarea value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Dark trap instrumental..." />
+          </div>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,alignItems:'end'}}>
+            <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
+            <Toggle checked={form.isFree} onChange={v=>set('isFree',v)} label="Gratuit" />
+          </div>
+
+          <Toggle checked={form.inCarousel} onChange={v=>set('inCarousel',v)} label="Afficher dans le carousel" />
+
+          <div style={S.rule} />
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
+              <label style={S.lbl}>Cover</label>
+              <DropZone label="Image (glisser ou cliquer)" accept="image/*" file={coverFile} onFile={onCover} preview={prevImg} />
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:5}}>
+              <label style={S.lbl}>Audio (MP3)</label>
+              <DropZone label="MP3 (glisser ou cliquer)" accept="audio/*" file={audioFile} onFile={setAudioFile} preview={null} />
+              {isEdit && beat.audioPath && !audioFile && (
+                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',marginTop:2}}>♪ fichier existant</div>
+              )}
+            </div>
+          </div>
+
+          <div style={S.rule} />
+
+          <div style={{display:'flex',gap:10}}>
+            <button type="submit" disabled={saving} style={S.btnP}>
+              {saving ? '...' : isEdit ? '✓ Enregistrer' : '+ Créer'}
+            </button>
+            <button type="button" onClick={onClose} style={S.btnG}>Annuler</button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+};
+
+// ---------- BeatRow (drag & drop) ----------
+const BeatRow = ({ beat, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragging }) => {
+  const [conf, setConf] = React.useState(false);
+  const src = imgSrc(beat);
+
+  return (
+    <tr
+      draggable
+      onDragStart={() => onDragStart(beat)}
+      onDragOver={e => { e.preventDefault(); onDragOver(beat); }}
+      onDrop={() => onDrop(beat)}
+      className={dragging ? 'dragging' : ''}
+      style={{borderBottom:'1px solid var(--border)',cursor:'grab',transition:'background .1s'}}
+      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.025)'}
+      onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+    >
+      {/* Drag handle */}
+      <td style={{...T.td, color:'var(--fg-3)', fontSize:14, cursor:'grab', paddingRight:0}}>⠿</td>
+
+      {/* Cover */}
+      <td style={T.td}>
+        {src
+          ? <img src={src} style={{width:42,height:42,borderRadius:6,objectFit:'cover',border:'2px double #000',display:'block'}} alt="" />
+          : <div style={{width:42,height:42,borderRadius:6,background:'var(--ink-800)',border:'1px solid var(--border)',display:'grid',placeItems:'center',fontSize:18,color:'var(--fg-3)'}}>♪</div>
+        }
+      </td>
+
+      {/* Infos */}
+      <td style={T.td}>
+        <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)'}}>{beat.title}</div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2}}>{beat.bpm} BPM · {beat.keySignature} · {beat.duration}</div>
+      </td>
+
+      {/* Genre */}
+      <td style={T.td}>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 8px',borderRadius:999,background:GC[beat.genre]||'#a3161f',color:'#fff'}}>
+          {beat.genre}
+        </span>
+      </td>
+
+      {/* Prix */}
+      <td style={T.td}>
+        <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,color:'var(--fg-1)'}}>{beat.price}€</span>
+        {beat.isFree && <span style={{fontFamily:'var(--font-mono)',fontSize:9,color:'var(--ember-400)',marginLeft:5,textTransform:'uppercase',letterSpacing:'.1em'}}>gratuit</span>}
+      </td>
+
+      {/* Carousel toggle */}
+      <td style={{...T.td,textAlign:'center'}}>
+        <Toggle checked={beat.inCarousel} onChange={v=>onToggleCarousel(beat,v)} />
+      </td>
+
+      {/* Audio */}
+      <td style={{...T.td,textAlign:'center'}}>
+        {beat.audioPath
+          ? <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)'}}>♪ ok</span>
+          : <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>—</span>}
+      </td>
+
+      {/* Actions */}
+      <td style={{...T.td,textAlign:'right'}}>
+        <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
+          <button onClick={()=>onEdit(beat)} style={T.btnE} title="Modifier">✏</button>
+          {conf
+            ? <>
+                <button onClick={()=>onDelete(beat)} style={T.btnD}>Confirmer</button>
+                <button onClick={()=>setConf(false)} style={T.btnG}>✕</button>
+              </>
+            : <button onClick={()=>setConf(true)} style={T.btnD} title="Supprimer">🗑</button>
+          }
+        </div>
+      </td>
+    </tr>
+  );
+};
+
+// ---------- App ----------
+const App = () => {
+  const [beats, setBeats]     = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [drawer, setDrawer]   = React.useState(null);
+  const [toast, setToast]     = React.useState(null);
+  const [dragSrc, setDragSrc] = React.useState(null);
+  const [dragOver, setDragOver] = React.useState(null);
+
+  const showToast = (msg, err=false) => setToast({msg,err});
+
+  const load = async () => {
+    setLoading(true);
+    try { setBeats(await (await fetch(API)).json()); }
+    catch { showToast('Impossible de charger les beats',true); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(()=>{ load(); },[]);
+
+  const handleSaved = (saved, isEdit) => {
+    setDrawer(null);
+    load();
+    showToast(isEdit ? `${saved.title} mis à jour` : `${saved.title} ajouté en tête de liste`);
+  };
+
+  const handleDelete = async beat => {
+    try {
+      await fetch(`${API}/${beat.id}`, {method:'DELETE'});
+      setBeats(b => b.filter(x => x.id !== beat.id));
+      showToast(`${beat.title} supprimé`);
+    } catch { showToast('Erreur suppression',true); }
+  };
+
+  const handleToggleCarousel = async (beat, val) => {
+    try {
+      const fd = new FormData(); fd.append('inCarousel', val);
+      await fetch(`${API}/${beat.id}`, {method:'POST', body:fd});
+      setBeats(b => b.map(x => x.id===beat.id ? {...x,inCarousel:val} : x));
+    } catch { showToast('Erreur',true); }
+  };
+
+  // Drag & drop
+  const handleDragStart = beat => setDragSrc(beat);
+
+  const handleDragOver = beat => {
+    if (!dragSrc || dragSrc.id === beat.id) return;
+    setDragOver(beat.id);
+  };
+
+  const handleDrop = async target => {
+    if (!dragSrc || dragSrc.id === target.id) { setDragSrc(null); setDragOver(null); return; }
+    // Calculer le nouvel ordre
+    const reordered = [...beats];
+    const srcIdx  = reordered.findIndex(b => b.id === dragSrc.id);
+    const tgtIdx  = reordered.findIndex(b => b.id === target.id);
+    reordered.splice(srcIdx, 1);
+    reordered.splice(tgtIdx, 0, dragSrc);
+    // Assigner les positions
+    const positions = reordered.map((b, i) => ({ id: b.id, position: i }));
+    setBeats(reordered);
+    setDragSrc(null); setDragOver(null);
+    try {
+      await fetch(`${API}/reorder`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(positions),
+      });
+      showToast('Ordre sauvegardé');
+    } catch { showToast('Erreur sauvegarde ordre',true); load(); }
+  };
+
+  const carouselCount = beats.filter(b=>b.inCarousel).length;
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--ink-950)'}}>
+
+      {/* Header */}
+      <header style={{padding:'20px 32px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--ink-950)',position:'sticky',top:0,zIndex:50}}>
+        <div>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--ember-400)'}}>◈ khen fu</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--fg-1)',lineHeight:1.1}}>Interface Admin</div>
+        </div>
+        <div style={{display:'flex',gap:12,alignItems:'center'}}>
+          <span style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase'}}>
+            {beats.length} beats · {carouselCount} carousel
+          </span>
+          <button onClick={()=>setDrawer('new')} style={S.btnP}>+ Nouveau beat</button>
+        </div>
+      </header>
+
+      {/* Hint drag */}
+      {beats.length > 0 && (
+        <div style={{padding:'10px 32px 0',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase'}}>
+          ⠿ Glisser les lignes pour réorganiser · Le 1er de la liste = 1ère position dans le carousel
+        </div>
+      )}
+
+      {/* Table */}
+      <main style={{padding:'16px 32px 32px'}}>
+        {loading ? (
+          <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'80px 0'}}>Chargement…</div>
+        ) : (
+          <div style={{background:'var(--ink-900)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+            <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <thead>
+                <tr style={{borderBottom:'1px solid var(--border)',background:'var(--ink-850)'}}>
+                  {['','Cover','Titre','Genre','Prix','Carousel','Audio','Actions'].map((h,i)=>(
+                    <th key={i} style={{padding:'10px 12px',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)',fontWeight:400,textAlign:h==='Actions'?'right':['Carousel','Audio'].includes(h)?'center':'left'}}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {beats.map(b=>(
+                  <BeatRow
+                    key={b.id} beat={b}
+                    onEdit={setDrawer}
+                    onDelete={handleDelete}
+                    onToggleCarousel={handleToggleCarousel}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    dragging={dragOver===b.id}
+                  />
+                ))}
+              </tbody>
+            </table>
+            {beats.length===0 && (
+              <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>
+                Aucun beat · cliquer sur "+ Nouveau beat"
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Drawer */}
+      {drawer && <BeatForm beat={drawer==='new'?null:drawer} onClose={()=>setDrawer(null)} onSaved={handleSaved} />}
+
+      {/* Toast */}
+      {toast && <Toast msg={toast.msg} err={toast.err} onDone={()=>setToast(null)} />}
+    </div>
+  );
+};
+
+// Styles partagés
+const S = {
+  eye: {fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.24em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:4},
+  h2:  {fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'.08em',textTransform:'uppercase',margin:0,color:'var(--fg-1)'},
+  xbtn:{background:'transparent',border:'1px solid var(--border)',borderRadius:4,color:'var(--fg-3)',fontFamily:'var(--font-mono)',fontSize:12,padding:'6px 10px',cursor:'pointer'},
+  lbl: {fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)'},
+  rule:{height:1,background:'var(--border)'},
+  btnP:{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',padding:'11px 20px',borderRadius:4,background:'var(--crimson-600)',color:'var(--bone-50)',border:'1px solid var(--crimson-700)',boxShadow:'var(--glow-crimson-sm)',cursor:'pointer'},
+  btnG:{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.16em',textTransform:'uppercase',padding:'11px 16px',borderRadius:4,background:'transparent',color:'var(--fg-2)',border:'1px solid var(--border)',cursor:'pointer'},
+};
+const T = {
+  td:  {padding:'10px 12px',verticalAlign:'middle'},
+  btnE:{fontFamily:'var(--font-mono)',fontSize:11,padding:'6px 10px',borderRadius:4,background:'transparent',border:'1px solid var(--border)',color:'var(--fg-2)',cursor:'pointer'},
+  btnD:{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.1em',padding:'6px 10px',borderRadius:4,background:'rgba(163,22,31,.15)',border:'1px solid var(--border-hot)',color:'var(--crimson-400)',cursor:'pointer'},
+  btnG:{fontFamily:'var(--font-mono)',fontSize:10,padding:'6px 8px',borderRadius:4,background:'transparent',border:'1px solid var(--border)',color:'var(--fg-3)',cursor:'pointer'},
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
