@@ -1,0 +1,6 @@
+{
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.file": "project/ui_kits/showcase/index.html",
+  "liveServer.settings.NoBrowser": false
+}

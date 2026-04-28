@@ -19,7 +19,6 @@
 <div id="root"></div>
 
 <script src="../beatData.js"></script>
-<script src="codexData.js"></script>
 <script type="text/babel" src="../AudioPlayer.jsx"></script>
 <script type="text/babel" src="CodexNav.jsx"></script>
 <script type="text/babel" src="Sidebar.jsx"></script>
@@ -30,12 +29,19 @@
   const App = () => {
     const [genre, setGenre]       = React.useState('All');
     const [search, setSearch]     = React.useState('');
-    const [selected, setSelected] = React.useState(window.BEATS[3]);
+    const [beats, setBeats]       = React.useState([]);
+    const [selected, setSelected] = React.useState(null);
     const [playing, setPlaying]   = React.useState(null);
 
-    // Filtre beats par genre + recherche texte
+    React.useEffect(() => {
+      window.loadBeats().then(loaded => {
+        setBeats(loaded);
+        setSelected(loaded[3] || loaded[0] || null);
+      }).catch(console.error);
+    }, []);
+
     const filtered = React.useMemo(() => {
-      let list = window.BEATS;
+      let list = beats;
       if (genre !== 'All') list = list.filter(b => b.genre === genre);
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -47,13 +53,13 @@
         );
       }
       return list;
-    }, [genre, search]);
+    }, [genre, search, beats]);
 
     return (
       <>
         <CodexNav search={search} setSearch={setSearch} />
         <div className="app-body">
-          <Sidebar genre={genre} setGenre={setGenre} />
+          <Sidebar genre={genre} setGenre={setGenre} beats={beats} />
           <FigureGrid
             genre={genre}
             beats={filtered}

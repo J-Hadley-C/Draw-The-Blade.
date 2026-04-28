@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="../../colors_and_type.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--ink-950); color: var(--fg-1); }
+  html, body { margin: 0; padding: 0; background: var(--ink-950); color: var(--fg-1); height: 100%; }
   body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   #root { min-height: 100vh; }
 
@@ -47,9 +47,29 @@
   .toast.err { border-color:var(--crimson-500); color:var(--crimson-400); }
   @keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 
-  /* Drag row */
+  /* Drag */
   tr.drag-over td { border-top:2px solid var(--crimson-500) !important; }
   tr.dragging { opacity:.4; }
+
+  /* Layout */
+  .admin-layout { display:flex; min-height:100vh; }
+  .admin-sidebar { width:220px; flex-shrink:0; background:var(--ink-950); border-right:1px solid var(--border); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .admin-main { flex:1; min-width:0; background:var(--ink-900); }
+
+  /* Sidebar nav item */
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--fg-3); cursor:pointer; transition:all .14s; border-left:2px solid transparent; -webkit-user-select:none; user-select:none; }
+  .nav-item:hover { color:var(--fg-1); background:rgba(255,255,255,.03); }
+  .nav-item.on { color:var(--ember-400); border-left-color:var(--crimson-500); background:rgba(163,22,31,.08); }
+  .nav-item .icon { width:16px; text-align:center; flex-shrink:0; }
+
+  /* Stat cards */
+  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .stat-card { background:var(--ink-850); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
+
+  /* Licence cards */
+  .lic-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .lic-card { background:var(--ink-850); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:12px; }
+  .lic-card.featured { border-color:var(--crimson-600); box-shadow:var(--glow-crimson-sm); }
 </style>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -57,21 +77,18 @@
 </head>
 <body><div id="root"></div>
 <script type="text/babel">
-const API      = 'http://127.0.0.1:8000/api/beats';
-const UPLOADS  = 'http://127.0.0.1:8000/uploads/beats';
-const GENRES   = ['Trap','Drill','SexyDrill','BB','R&B','Afrobeat','Kompa'];
+const API     = 'http://127.0.0.1:8000/api/beats';
+const UPLOADS = 'http://127.0.0.1:8000/uploads/beats';
+const GENRES  = ['Trap','Drill','SexyDrill','BB','R&B','Afrobeat','Kompa'];
 const GC = { Trap:'#a3161f', Drill:'#7c1d6f', SexyDrill:'#c0185e', BB:'#1a5c3a', 'R&B':'#1a3a6b', Afrobeat:'#7a4a00', Kompa:'#0a4a6b' };
 
-// Résoudre l'URL de la cover
 function imgSrc(beat) {
   if (!beat.imagePath) return null;
-  // images fixtures : "1.png", "3.jpg", etc.
   if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
-  // images uploadées : stockées dans uploads/beats/
   return `${UPLOADS}/${beat.imagePath}`;
 }
 
-// ---------- Toggle ----------
+// ── Toggle ──────────────────────────────────────────────────────────────────
 const Toggle = ({ checked, onChange, label }) => (
   <label className="tog">
     <span className="tog-box">
@@ -82,7 +99,7 @@ const Toggle = ({ checked, onChange, label }) => (
   </label>
 );
 
-// ---------- DropZone ----------
+// ── DropZone ─────────────────────────────────────────────────────────────────
 const DropZone = ({ label, accept, file, onFile, preview }) => {
   const [drag, setDrag] = React.useState(false);
   const ref = React.useRef();
@@ -102,13 +119,13 @@ const DropZone = ({ label, accept, file, onFile, preview }) => {
   );
 };
 
-// ---------- Toast ----------
+// ── Toast ────────────────────────────────────────────────────────────────────
 const Toast = ({ msg, err, onDone }) => {
   React.useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t);},[]);
   return <div className={'toast'+(err?' err':'')}>{msg}</div>;
 };
 
-// ---------- BeatForm ----------
+// ── BeatForm ─────────────────────────────────────────────────────────────────
 const EMPTY = { title:'', genre:'Trap', bpm:'', key:'', duration:'', description:'', price:'', isFree:false, inCarousel:false };
 
 const BeatForm = ({ beat, onClose, onSaved }) => {
@@ -118,14 +135,11 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
     key:beat.keySignature, duration:beat.duration, description:beat.description,
     price:String(beat.price), isFree:beat.isFree, inCarousel:beat.inCarousel,
   } : {...EMPTY});
-
   const [coverFile, setCoverFile] = React.useState(null);
   const [audioFile, setAudioFile] = React.useState(null);
   const [saving, setSaving]       = React.useState(false);
   const [prevImg, setPrevImg]     = React.useState(isEdit ? imgSrc(beat) : null);
-
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
-
   const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
 
   const submit = async e => {
@@ -139,9 +153,8 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
       const res = await fetch(url, { method:'POST', body:fd });
       if (!res.ok) throw new Error(await res.text());
       onSaved(await res.json(), isEdit);
-    } catch(err) {
-      alert('Erreur : ' + err.message);
-    } finally { setSaving(false); }
+    } catch(err) { alert('Erreur : '+err.message); }
+    finally { setSaving(false); }
   };
 
   const F = ({lbl,k,type='text',ph=''}) => (
@@ -163,10 +176,8 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
           </div>
           <button onClick={onClose} style={S.xbtn}>✕</button>
         </div>
-
         <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:14}}>
           <F lbl="Titre" k="title" ph="Ex: Night Runner" />
-
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div style={{display:'flex',flexDirection:'column',gap:5}}>
               <label style={S.lbl}>Genre</label>
@@ -176,26 +187,20 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
             </div>
             <F lbl="BPM" k="bpm" type="number" ph="140" />
           </div>
-
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <F lbl="Tonalité" k="key" ph="Am" />
             <F lbl="Durée" k="duration" ph="3:24" />
           </div>
-
           <div style={{display:'flex',flexDirection:'column',gap:5}}>
             <label style={S.lbl}>Description</label>
             <textarea value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Dark trap instrumental..." />
           </div>
-
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,alignItems:'end'}}>
             <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
             <Toggle checked={form.isFree} onChange={v=>set('isFree',v)} label="Gratuit" />
           </div>
-
           <Toggle checked={form.inCarousel} onChange={v=>set('inCarousel',v)} label="Afficher dans le carousel" />
-
           <div style={S.rule} />
-
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <div style={{display:'flex',flexDirection:'column',gap:5}}>
               <label style={S.lbl}>Cover</label>
@@ -209,13 +214,9 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
               )}
             </div>
           </div>
-
           <div style={S.rule} />
-
           <div style={{display:'flex',gap:10}}>
-            <button type="submit" disabled={saving} style={S.btnP}>
-              {saving ? '...' : isEdit ? '✓ Enregistrer' : '+ Créer'}
-            </button>
+            <button type="submit" disabled={saving} style={S.btnP}>{saving?'...':isEdit?'✓ Enregistrer':'+ Créer'}</button>
             <button type="button" onClick={onClose} style={S.btnG}>Annuler</button>
           </div>
         </form>
@@ -224,88 +225,325 @@ const BeatForm = ({ beat, onClose, onSaved }) => {
   );
 };
 
-// ---------- BeatRow (drag & drop) ----------
+// ── BeatRow ──────────────────────────────────────────────────────────────────
 const BeatRow = ({ beat, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragging }) => {
   const [conf, setConf] = React.useState(false);
   const src = imgSrc(beat);
-
   return (
-    <tr
-      draggable
-      onDragStart={() => onDragStart(beat)}
-      onDragOver={e => { e.preventDefault(); onDragOver(beat); }}
-      onDrop={() => onDrop(beat)}
-      className={dragging ? 'dragging' : ''}
-      style={{borderBottom:'1px solid var(--border)',cursor:'grab',transition:'background .1s'}}
+    <tr draggable onDragStart={()=>onDragStart(beat)} onDragOver={e=>{e.preventDefault();onDragOver(beat);}} onDrop={()=>onDrop(beat)}
+      className={dragging?'dragging':''} style={{borderBottom:'1px solid var(--border)',cursor:'grab',transition:'background .1s'}}
       onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.025)'}
-      onMouseLeave={e=>e.currentTarget.style.background='transparent'}
-    >
-      {/* Drag handle */}
-      <td style={{...T.td, color:'var(--fg-3)', fontSize:14, cursor:'grab', paddingRight:0}}>⠿</td>
-
-      {/* Cover */}
+      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+      <td style={{...T.td,color:'var(--fg-3)',fontSize:14,cursor:'grab',paddingRight:0}}>⠿</td>
       <td style={T.td}>
-        {src
-          ? <img src={src} style={{width:42,height:42,borderRadius:6,objectFit:'cover',border:'2px double #000',display:'block'}} alt="" />
-          : <div style={{width:42,height:42,borderRadius:6,background:'var(--ink-800)',border:'1px solid var(--border)',display:'grid',placeItems:'center',fontSize:18,color:'var(--fg-3)'}}>♪</div>
-        }
+        {src ? <img src={src} style={{width:42,height:42,borderRadius:6,objectFit:'cover',border:'2px double #000',display:'block'}} alt="" />
+             : <div style={{width:42,height:42,borderRadius:6,background:'var(--ink-800)',border:'1px solid var(--border)',display:'grid',placeItems:'center',fontSize:18,color:'var(--fg-3)'}}>♪</div>}
       </td>
-
-      {/* Infos */}
       <td style={T.td}>
         <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)'}}>{beat.title}</div>
         <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2}}>{beat.bpm} BPM · {beat.keySignature} · {beat.duration}</div>
       </td>
-
-      {/* Genre */}
       <td style={T.td}>
-        <span style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 8px',borderRadius:999,background:GC[beat.genre]||'#a3161f',color:'#fff'}}>
-          {beat.genre}
-        </span>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 8px',borderRadius:999,background:GC[beat.genre]||'#a3161f',color:'#fff'}}>{beat.genre}</span>
       </td>
-
-      {/* Prix */}
       <td style={T.td}>
         <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,color:'var(--fg-1)'}}>{beat.price}€</span>
         {beat.isFree && <span style={{fontFamily:'var(--font-mono)',fontSize:9,color:'var(--ember-400)',marginLeft:5,textTransform:'uppercase',letterSpacing:'.1em'}}>gratuit</span>}
       </td>
-
-      {/* Carousel toggle */}
+      <td style={{...T.td,textAlign:'center'}}><Toggle checked={beat.inCarousel} onChange={v=>onToggleCarousel(beat,v)} /></td>
       <td style={{...T.td,textAlign:'center'}}>
-        <Toggle checked={beat.inCarousel} onChange={v=>onToggleCarousel(beat,v)} />
+        {beat.audioPath ? <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)'}}>♪ ok</span>
+                        : <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>—</span>}
       </td>
-
-      {/* Audio */}
-      <td style={{...T.td,textAlign:'center'}}>
-        {beat.audioPath
-          ? <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)'}}>♪ ok</span>
-          : <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>—</span>}
-      </td>
-
-      {/* Actions */}
       <td style={{...T.td,textAlign:'right'}}>
         <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
           <button onClick={()=>onEdit(beat)} style={T.btnE} title="Modifier">✏</button>
-          {conf
-            ? <>
-                <button onClick={()=>onDelete(beat)} style={T.btnD}>Confirmer</button>
-                <button onClick={()=>setConf(false)} style={T.btnG}>✕</button>
-              </>
-            : <button onClick={()=>setConf(true)} style={T.btnD} title="Supprimer">🗑</button>
-          }
+          {conf ? <>
+            <button onClick={()=>onDelete(beat)} style={T.btnD}>Confirmer</button>
+            <button onClick={()=>setConf(false)} style={T.btnG}>✕</button>
+          </> : <button onClick={()=>setConf(true)} style={T.btnD} title="Supprimer">🗑</button>}
         </div>
       </td>
     </tr>
   );
 };
 
-// ---------- App ----------
+// ── Section : Vue d'ensemble ─────────────────────────────────────────────────
+const OverviewSection = ({ beats, onGoTo }) => {
+  const withAudio   = beats.filter(b => b.audioPath).length;
+  const carousel    = beats.filter(b => b.inCarousel).length;
+  const free        = beats.filter(b => b.isFree).length;
+  const genres      = [...new Set(beats.map(b => b.genre))];
+  const recent      = [...beats].slice(0, 5);
+
+  const StatCard = ({ label, value, sub, color }) => (
+    <div className="stat-card">
+      <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--fg-3)',marginBottom:8}}>{label}</div>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:36,color:color||'var(--fg-1)',letterSpacing:'.04em',lineHeight:1}}>{value}</div>
+      {sub && <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:6,letterSpacing:'.1em'}}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div style={{padding:'32px'}}>
+      <div style={{marginBottom:28}}>
+        <div style={S.eye}>◈ tableau de bord</div>
+        <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>Vue d'ensemble</h1>
+      </div>
+
+      <div className="stat-grid" style={{marginBottom:32}}>
+        <StatCard label="Beats total" value={beats.length} sub={`${genres.length} genres`} />
+        <StatCard label="Avec audio" value={withAudio} sub={`${beats.length - withAudio} sans fichier`} color="var(--ember-400)" />
+        <StatCard label="En carousel" value={carousel} sub="rotation showcase" color="var(--crimson-400)" />
+        <StatCard label="Gratuits" value={free} sub="version taguée" color="#4a9a6b" />
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        {/* Derniers beats */}
+        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:10,padding:'20px'}}>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:14}}>♪ derniers beats ajoutés</div>
+          {recent.length === 0 && <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Aucun beat</div>}
+          {recent.map(b => (
+            <div key={b.id} style={{display:'flex',alignItems:'center',gap:12,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+              {imgSrc(b)
+                ? <img src={imgSrc(b)} style={{width:36,height:36,borderRadius:6,objectFit:'cover',flexShrink:0}} alt="" />
+                : <div style={{width:36,height:36,borderRadius:6,background:'var(--ink-800)',display:'grid',placeItems:'center',flexShrink:0,color:'var(--fg-3)'}}>♪</div>}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{b.title}</div>
+                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2}}>{b.genre} · {b.bpm} BPM</div>
+              </div>
+              <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,color:'var(--fg-2)',flexShrink:0}}>{b.price}€</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Répartition par genre */}
+        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:10,padding:'20px'}}>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:14}}>◈ répartition par genre</div>
+          {GENRES.map(g => {
+            const count = beats.filter(b => b.genre === g).length;
+            const pct   = beats.length ? Math.round((count/beats.length)*100) : 0;
+            if (!count) return null;
+            return (
+              <div key={g} style={{marginBottom:10}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                  <span style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--fg-2)'}}>{g}</span>
+                  <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>{count} · {pct}%</span>
+                </div>
+                <div style={{height:4,background:'var(--ink-700)',borderRadius:99}}>
+                  <div style={{height:'100%',width:`${pct}%`,background:GC[g]||'var(--crimson-500)',borderRadius:99,transition:'width .4s'}} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Liens rapides */}
+      <div style={{display:'flex',gap:12,marginTop:24}}>
+        <button onClick={()=>onGoTo('catalogue')} style={S.btnP}>+ Nouveau beat</button>
+        <a href="../../showcase/index.html" target="_blank" style={{...S.btnG,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>↗ Voir le Showcase</a>
+        <a href="../../codex/index.html" target="_blank" style={{...S.btnG,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>↗ Voir le Catalogue</a>
+      </div>
+    </div>
+  );
+};
+
+// ── Section : Catalogue ──────────────────────────────────────────────────────
+const CatalogueSection = ({ beats, loading, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragOver, onNew }) => {
+  const carouselCount = beats.filter(b=>b.inCarousel).length;
+  return (
+    <div style={{padding:'32px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
+        <div>
+          <div style={S.eye}>♪ gestion des beats</div>
+          <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>Catalogue</h1>
+          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase',marginTop:6}}>
+            {beats.length} beats · {carouselCount} en carousel
+          </div>
+        </div>
+        <button onClick={onNew} style={S.btnP}>+ Nouveau beat</button>
+      </div>
+
+      {beats.length > 0 && (
+        <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase',marginBottom:12}}>
+          ⠿ Glisser les lignes pour réorganiser
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'80px 0'}}>Chargement…</div>
+      ) : (
+        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid var(--border)',background:'var(--ink-800)'}}>
+                {['','Cover','Titre','Genre','Prix','Carousel','Audio','Actions'].map((h,i)=>(
+                  <th key={i} style={{padding:'10px 12px',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)',fontWeight:400,textAlign:h==='Actions'?'right':['Carousel','Audio'].includes(h)?'center':'left'}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {beats.map(b=>(
+                <BeatRow key={b.id} beat={b} onEdit={onEdit} onDelete={onDelete} onToggleCarousel={onToggleCarousel}
+                  onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} dragging={dragOver===b.id} />
+              ))}
+            </tbody>
+          </table>
+          {beats.length===0 && (
+            <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>
+              Aucun beat · cliquer sur "+ Nouveau beat"
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Section : Messages ───────────────────────────────────────────────────────
+const MessagesSection = () => (
+  <div style={{padding:'32px'}}>
+    <div style={S.eye}>✉ formulaire de contact</div>
+    <h1 style={{...S.h2,fontSize:28,margin:'4px 0 24px'}}>Messages</h1>
+    <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
+      <div style={{fontSize:32,marginBottom:16}}>✉</div>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:8}}>Formulaire de contact</div>
+      <div style={{fontFamily:'var(--font-sans)',fontSize:14,color:'var(--fg-3)',lineHeight:1.6}}>
+        La page de contact publique est en cours de développement.<br/>
+        Les messages reçus apparaîtront ici une fois la fonctionnalité activée.
+      </div>
+    </div>
+  </div>
+);
+
+// ── Section : Licences ───────────────────────────────────────────────────────
+const LicencesSection = () => {
+  const licences = [
+    {
+      id:'basic', label:'Licence Basique', price:'29 €',
+      tag:'Pour les artistes émergents',
+      features:['Utilisation non commerciale','1 projet / mixtape','500 copies physiques','Streaming illimité','Crédit obligatoire'],
+      featured:false,
+    },
+    {
+      id:'premium', label:'Licence Premium', price:'79 €',
+      tag:'Pour les releases commerciales',
+      features:['Utilisation commerciale','Projets illimités','Copies illimitées','Streaming illimité','Retrait du crédit possible','Revente en single'],
+      featured:true,
+    },
+    {
+      id:'exclu', label:'Exclusivité', price:'Sur devis',
+      tag:'Droits complets & uniques',
+      features:['Droits exclusifs complets','Retrait de la vente immédiat','Transfert de copyright','Utilisation TV / Cinéma','Accompagnement personnalisé'],
+      featured:false,
+    },
+  ];
+
+  return (
+    <div style={{padding:'32px'}}>
+      <div style={S.eye}>◈ types de licences</div>
+      <h1 style={{...S.h2,fontSize:28,margin:'4px 0 8px'}}>Licences</h1>
+      <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:28}}>
+        Ces tarifs sont affichés sur la page d'achat publique
+      </div>
+      <div className="lic-grid">
+        {licences.map(l => (
+          <div key={l.id} className={'lic-card'+(l.featured?' featured':'')}>
+            {l.featured && (
+              <div style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--crimson-400)',background:'rgba(163,22,31,.15)',border:'1px solid var(--border-hot)',borderRadius:999,padding:'3px 10px',alignSelf:'flex-start'}}>
+                ◈ Recommandé
+              </div>
+            )}
+            <div>
+              <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)'}}>{l.label}</div>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:4,letterSpacing:'.1em'}}>{l.tag}</div>
+            </div>
+            <div style={{fontFamily:'var(--font-display)',fontWeight:900,fontSize:32,color:l.featured?'var(--crimson-400)':'var(--fg-1)',letterSpacing:'.04em'}}>{l.price}</div>
+            <div style={{height:1,background:'var(--border)'}} />
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {l.features.map((f,i) => (
+                <div key={i} style={{display:'flex',gap:8,alignItems:'center'}}>
+                  <span style={{color:'var(--ember-400)',fontSize:12,flexShrink:0}}>✓</span>
+                  <span style={{fontFamily:'var(--font-sans)',fontSize:13,color:'var(--fg-2)'}}>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{marginTop:20,fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',letterSpacing:'.12em'}}>
+        Pour modifier les tarifs ou les conditions, contactez le développeur.
+      </div>
+    </div>
+  );
+};
+
+// ── Section : Paramètres ─────────────────────────────────────────────────────
+const ParametresSection = () => (
+  <div style={{padding:'32px'}}>
+    <div style={S.eye}>⚙ configuration</div>
+    <h1 style={{...S.h2,fontSize:28,margin:'4px 0 24px'}}>Paramètres</h1>
+    <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
+      <div style={{fontSize:32,marginBottom:16}}>⚙</div>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:8}}>Paramètres du site</div>
+      <div style={{fontFamily:'var(--font-sans)',fontSize:14,color:'var(--fg-3)',lineHeight:1.6}}>
+        Nom du site, bio, liens réseaux sociaux et configuration générale.<br/>
+        Cette section sera disponible prochainement.
+      </div>
+    </div>
+  </div>
+);
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+const AdminSidebar = ({ active, setActive, beats }) => {
+  const nav = [
+    { id:'overview',    icon:'⊞', label:'Vue d\'ensemble' },
+    { id:'catalogue',   icon:'♪', label:'Catalogue' },
+    { id:'messages',    icon:'✉', label:'Messages' },
+    { id:'licences',    icon:'◈', label:'Licences' },
+    { id:'parametres',  icon:'⚙', label:'Paramètres' },
+  ];
+
+  return (
+    <aside className="admin-sidebar">
+      {/* Logo */}
+      <div style={{padding:'24px 20px 16px',borderBottom:'1px solid var(--border)'}}>
+        <div style={{fontFamily:'var(--font-display)',fontWeight:900,fontSize:16,letterSpacing:'.26em',textTransform:'uppercase',color:'var(--fg-1)'}}>KHEN FU</div>
+        <div style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--crimson-500)',marginTop:2}}>Interface Admin</div>
+      </div>
+
+      {/* Navigation */}
+      <nav style={{flex:1,paddingTop:8}}>
+        {nav.map(n => (
+          <div key={n.id} className={'nav-item'+(active===n.id?' on':'')} onClick={()=>setActive(n.id)}>
+            <span className="icon">{n.icon}</span>
+            <span>{n.label}</span>
+            {n.id==='catalogue' && beats.length > 0 && (
+              <span style={{marginLeft:'auto',fontFamily:'var(--font-mono)',fontSize:9,background:'var(--ink-800)',border:'1px solid var(--border)',borderRadius:999,padding:'1px 7px',color:'var(--fg-3)'}}>{beats.length}</span>
+            )}
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div style={{padding:'16px 20px',borderTop:'1px solid var(--border)'}}>
+        <a href="../../showcase/index.html" target="_blank" style={{display:'flex',alignItems:'center',gap:8,fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--fg-3)',textDecoration:'none'}}>
+          <span>↗</span><span>Voir le site</span>
+        </a>
+      </div>
+    </aside>
+  );
+};
+
+// ── App ──────────────────────────────────────────────────────────────────────
 const App = () => {
-  const [beats, setBeats]     = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [drawer, setDrawer]   = React.useState(null);
-  const [toast, setToast]     = React.useState(null);
-  const [dragSrc, setDragSrc] = React.useState(null);
+  const [section, setSection]   = React.useState('overview');
+  const [beats, setBeats]       = React.useState([]);
+  const [loading, setLoading]   = React.useState(true);
+  const [drawer, setDrawer]     = React.useState(null);
+  const [toast, setToast]       = React.useState(null);
+  const [dragSrc, setDragSrc]   = React.useState(null);
   const [dragOver, setDragOver] = React.useState(null);
 
   const showToast = (msg, err=false) => setToast({msg,err});
@@ -320,15 +558,14 @@ const App = () => {
   React.useEffect(()=>{ load(); },[]);
 
   const handleSaved = (saved, isEdit) => {
-    setDrawer(null);
-    load();
-    showToast(isEdit ? `${saved.title} mis à jour` : `${saved.title} ajouté en tête de liste`);
+    setDrawer(null); load();
+    showToast(isEdit?`${saved.title} mis à jour`:`${saved.title} ajouté`);
   };
 
   const handleDelete = async beat => {
     try {
-      await fetch(`${API}/${beat.id}`, {method:'DELETE'});
-      setBeats(b => b.filter(x => x.id !== beat.id));
+      await fetch(`${API}/${beat.id}`,{method:'DELETE'});
+      setBeats(b=>b.filter(x=>x.id!==beat.id));
       showToast(`${beat.title} supprimé`);
     } catch { showToast('Erreur suppression',true); }
   };
@@ -336,117 +573,50 @@ const App = () => {
   const handleToggleCarousel = async (beat, val) => {
     try {
       const fd = new FormData(); fd.append('inCarousel', val);
-      await fetch(`${API}/${beat.id}`, {method:'POST', body:fd});
-      setBeats(b => b.map(x => x.id===beat.id ? {...x,inCarousel:val} : x));
+      await fetch(`${API}/${beat.id}`,{method:'POST',body:fd});
+      setBeats(b=>b.map(x=>x.id===beat.id?{...x,inCarousel:val}:x));
     } catch { showToast('Erreur',true); }
   };
 
-  // Drag & drop
   const handleDragStart = beat => setDragSrc(beat);
-
-  const handleDragOver = beat => {
-    if (!dragSrc || dragSrc.id === beat.id) return;
-    setDragOver(beat.id);
-  };
+  const handleDragOver  = beat => { if(!dragSrc||dragSrc.id===beat.id)return; setDragOver(beat.id); };
 
   const handleDrop = async target => {
-    if (!dragSrc || dragSrc.id === target.id) { setDragSrc(null); setDragOver(null); return; }
-    // Calculer le nouvel ordre
-    const reordered = [...beats];
-    const srcIdx  = reordered.findIndex(b => b.id === dragSrc.id);
-    const tgtIdx  = reordered.findIndex(b => b.id === target.id);
-    reordered.splice(srcIdx, 1);
-    reordered.splice(tgtIdx, 0, dragSrc);
-    // Assigner les positions
-    const positions = reordered.map((b, i) => ({ id: b.id, position: i }));
-    setBeats(reordered);
-    setDragSrc(null); setDragOver(null);
+    if(!dragSrc||dragSrc.id===target.id){setDragSrc(null);setDragOver(null);return;}
+    const reordered=[...beats];
+    const si=reordered.findIndex(b=>b.id===dragSrc.id);
+    const ti=reordered.findIndex(b=>b.id===target.id);
+    reordered.splice(si,1); reordered.splice(ti,0,dragSrc);
+    const positions=reordered.map((b,i)=>({id:b.id,position:i}));
+    setBeats(reordered); setDragSrc(null); setDragOver(null);
     try {
-      await fetch(`${API}/reorder`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(positions),
-      });
+      await fetch(`${API}/reorder`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(positions)});
       showToast('Ordre sauvegardé');
     } catch { showToast('Erreur sauvegarde ordre',true); load(); }
   };
 
-  const carouselCount = beats.filter(b=>b.inCarousel).length;
+  const openNew = () => { setSection('catalogue'); setDrawer('new'); };
 
   return (
-    <div style={{minHeight:'100vh',background:'var(--ink-950)'}}>
+    <div className="admin-layout">
+      <AdminSidebar active={section} setActive={setSection} beats={beats} />
 
-      {/* Header */}
-      <header style={{padding:'20px 32px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--ink-950)',position:'sticky',top:0,zIndex:50}}>
-        <div>
-          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.3em',textTransform:'uppercase',color:'var(--ember-400)'}}>◈ khen fu</div>
-          <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--fg-1)',lineHeight:1.1}}>Interface Admin</div>
-        </div>
-        <div style={{display:'flex',gap:12,alignItems:'center'}}>
-          <span style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase'}}>
-            {beats.length} beats · {carouselCount} carousel
-          </span>
-          <button onClick={()=>setDrawer('new')} style={S.btnP}>+ Nouveau beat</button>
-        </div>
-      </header>
+      <div className="admin-main">
+        {section==='overview'   && <OverviewSection beats={beats} onGoTo={s=>{setSection(s);if(s==='catalogue')setDrawer('new');}} />}
+        {section==='catalogue'  && <CatalogueSection beats={beats} loading={loading} onEdit={setDrawer} onDelete={handleDelete}
+            onToggleCarousel={handleToggleCarousel} onDragStart={handleDragStart} onDragOver={handleDragOver}
+            onDrop={handleDrop} dragOver={dragOver} onNew={()=>setDrawer('new')} />}
+        {section==='messages'   && <MessagesSection />}
+        {section==='licences'   && <LicencesSection />}
+        {section==='parametres' && <ParametresSection />}
+      </div>
 
-      {/* Hint drag */}
-      {beats.length > 0 && (
-        <div style={{padding:'10px 32px 0',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase'}}>
-          ⠿ Glisser les lignes pour réorganiser · Le 1er de la liste = 1ère position dans le carousel
-        </div>
-      )}
-
-      {/* Table */}
-      <main style={{padding:'16px 32px 32px'}}>
-        {loading ? (
-          <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'80px 0'}}>Chargement…</div>
-        ) : (
-          <div style={{background:'var(--ink-900)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
-            <table style={{width:'100%',borderCollapse:'collapse'}}>
-              <thead>
-                <tr style={{borderBottom:'1px solid var(--border)',background:'var(--ink-850)'}}>
-                  {['','Cover','Titre','Genre','Prix','Carousel','Audio','Actions'].map((h,i)=>(
-                    <th key={i} style={{padding:'10px 12px',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)',fontWeight:400,textAlign:h==='Actions'?'right':['Carousel','Audio'].includes(h)?'center':'left'}}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {beats.map(b=>(
-                  <BeatRow
-                    key={b.id} beat={b}
-                    onEdit={setDrawer}
-                    onDelete={handleDelete}
-                    onToggleCarousel={handleToggleCarousel}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    dragging={dragOver===b.id}
-                  />
-                ))}
-              </tbody>
-            </table>
-            {beats.length===0 && (
-              <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>
-                Aucun beat · cliquer sur "+ Nouveau beat"
-              </div>
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Drawer */}
       {drawer && <BeatForm beat={drawer==='new'?null:drawer} onClose={()=>setDrawer(null)} onSaved={handleSaved} />}
-
-      {/* Toast */}
-      {toast && <Toast msg={toast.msg} err={toast.err} onDone={()=>setToast(null)} />}
+      {toast  && <Toast msg={toast.msg} err={toast.err} onDone={()=>setToast(null)} />}
     </div>
   );
 };
 
-// Styles partagés
 const S = {
   eye: {fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.24em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:4},
   h2:  {fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'.08em',textTransform:'uppercase',margin:0,color:'var(--fg-1)'},

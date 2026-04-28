@@ -6,9 +6,11 @@ use App\Entity\Beat;
 use App\Repository\BeatRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/beats', name: 'api_beats_')]
@@ -49,6 +51,26 @@ class BeatController extends AbstractController
         }
         $this->em->flush();
         return new Response(null, 204);
+    }
+
+    #[Route('/{id}/stream', name: 'stream', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function streamAudio(Beat $beat): Response
+    {
+        if (!$beat->getAudioPath()) {
+            return new Response('Audio non disponible', 404);
+        }
+
+        $path = $this->uploadsDir . '/' . $beat->getAudioPath();
+
+        if (!file_exists($path)) {
+            return new Response('Fichier introuvable', 404);
+        }
+
+        $response = new BinaryFileResponse($path);
+        $response->headers->set('Content-Type', 'audio/mpeg');
+        $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_INLINE);
+
+        return $response;
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]

@@ -16,7 +16,6 @@ const Hero = ({ setPlaying, beats = [] }) => {
       <div style={heroStyles.copy}>
         <div style={heroStyles.eye}>♪ khen fu · beatmaker</div>
         <h1 style={heroStyles.title}>Beats.<br />Forgés<br />en silence.</h1>
-        <div style={heroStyles.kana}>音楽 · 刃</div>
         <p style={heroStyles.body}>
           Dix productions circulent. Survole pour les détails.
           Double-clic pour lancer l'écoute. Hover pause la rotation.
@@ -30,7 +29,7 @@ const Hero = ({ setPlaying, beats = [] }) => {
         </div>
 
         <div style={heroStyles.ctaRow}>
-          <button style={heroStyles.primary}>Voir le catalogue</button>
+          <a href="../codex/index.html" style={heroStyles.primary}>Voir le catalogue</a>
           <button style={heroStyles.ghost} onClick={() => setPaused(p => !p)}>
             {paused ? '▶ Reprendre' : '⏸ Pause'}
           </button>
