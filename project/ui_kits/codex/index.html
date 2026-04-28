@@ -19,6 +19,7 @@
 <div id="root"></div>
 
 <script src="../beatData.js"></script>
+<script type="text/babel" src="../LicenceModal.jsx"></script>
 <script type="text/babel" src="../AudioPlayer.jsx"></script>
 <script type="text/babel" src="CodexNav.jsx"></script>
 <script type="text/babel" src="Sidebar.jsx"></script>
@@ -32,6 +33,7 @@
     const [beats, setBeats]       = React.useState([]);
     const [selected, setSelected] = React.useState(null);
     const [playing, setPlaying]   = React.useState(null);
+    const [buyBeat, setBuyBeat]   = React.useState(null);
 
     React.useEffect(() => {
       window.loadBeats().then(loaded => {
@@ -71,9 +73,11 @@
             figure={selected}
             onClose={() => setSelected(null)}
             setPlaying={setPlaying}
+            onBuy={setBuyBeat}
           />
         </div>
-        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} />
+        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} onBuy={setBuyBeat} />
+        <LicenceModal beat={buyBeat} onClose={() => setBuyBeat(null)} />
       </>
     );
   };

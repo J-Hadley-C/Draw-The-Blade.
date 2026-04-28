@@ -4,7 +4,7 @@ const GENRE_COLORS = {
   BB: '#1a5c3a', 'R&B': '#1a3a6b', Afrobeat: '#7a4a00', Kompa: '#0a4a6b',
 };
 
-const FigureDetail = ({ figure: beat, onClose, setPlaying }) => {
+const FigureDetail = ({ figure: beat, onClose, setPlaying, onBuy }) => {
   if (!beat) return null;
 
   return (
@@ -56,7 +56,7 @@ const FigureDetail = ({ figure: beat, onClose, setPlaying }) => {
             ⬇ Gratuit
           </button>
         )}
-        <button style={fdStyles.btnBuy}>
+        <button onClick={() => onBuy && onBuy(beat)} style={fdStyles.btnBuy}>
           Acheter · {beat.price} €
         </button>
       </div>

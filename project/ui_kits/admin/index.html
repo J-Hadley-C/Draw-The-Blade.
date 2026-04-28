@@ -402,20 +402,113 @@ const CatalogueSection = ({ beats, loading, onEdit, onDelete, onToggleCarousel, 
 };
 
 // ── Section : Messages ───────────────────────────────────────────────────────
-const MessagesSection = () => (
-  <div style={{padding:'32px'}}>
-    <div style={S.eye}>✉ formulaire de contact</div>
-    <h1 style={{...S.h2,fontSize:28,margin:'4px 0 24px'}}>Messages</h1>
-    <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
-      <div style={{fontSize:32,marginBottom:16}}>✉</div>
-      <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:8}}>Formulaire de contact</div>
-      <div style={{fontFamily:'var(--font-sans)',fontSize:14,color:'var(--fg-3)',lineHeight:1.6}}>
-        La page de contact publique est en cours de développement.<br/>
-        Les messages reçus apparaîtront ici une fois la fonctionnalité activée.
+const MSG_API = 'http://127.0.0.1:8000/api/messages';
+
+const MessagesSection = () => {
+  const [messages, setMessages] = React.useState([]);
+  const [loading, setLoading]   = React.useState(true);
+  const [selected, setSelected] = React.useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    try { setMessages(await (await fetch(MSG_API)).json()); }
+    catch { /* silencieux */ }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => { load(); }, []);
+
+  const markRead = async msg => {
+    if (msg.isRead) return;
+    await fetch(`${MSG_API}/${msg.id}/read`, { method:'PATCH' });
+    setMessages(ms => ms.map(m => m.id===msg.id ? {...m,isRead:true} : m));
+    if (selected?.id === msg.id) setSelected({...msg,isRead:true});
+  };
+
+  const del = async msg => {
+    await fetch(`${MSG_API}/${msg.id}`, { method:'DELETE' });
+    setMessages(ms => ms.filter(m => m.id !== msg.id));
+    if (selected?.id === msg.id) setSelected(null);
+  };
+
+  const unread = messages.filter(m => !m.isRead).length;
+
+  const fmt = iso => new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  return (
+    <div style={{padding:'32px'}}>
+      <div style={S.eye}>✉ formulaire de contact</div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:24}}>
+        <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>
+          Messages
+          {unread > 0 && <span style={{marginLeft:10,fontFamily:'var(--font-mono)',fontSize:12,background:'var(--crimson-600)',color:'#fff',padding:'2px 9px',borderRadius:999,verticalAlign:'middle'}}>{unread}</span>}
+        </h1>
+        <button onClick={load} style={S.btnG}>↻ Actualiser</button>
       </div>
+
+      {loading ? (
+        <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>Chargement…</div>
+      ) : messages.length === 0 ? (
+        <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
+          <div style={{fontSize:32,marginBottom:12}}>✉</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:16,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:6}}>Aucun message</div>
+          <div style={{fontFamily:'var(--font-sans)',fontSize:13,color:'var(--fg-3)'}}>Les messages du formulaire de contact apparaîtront ici.</div>
+        </div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:16,alignItems:'start'}}>
+          {/* Liste */}
+          <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
+            {messages.map(m => (
+              <div key={m.id}
+                onClick={() => { setSelected(m); markRead(m); }}
+                style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',cursor:'pointer',background:selected?.id===m.id?'rgba(163,22,31,.1)':'transparent',transition:'background .1s',position:'relative'}}
+                onMouseEnter={e=>{ if(selected?.id!==m.id) e.currentTarget.style.background='rgba(255,255,255,.03)'; }}
+                onMouseLeave={e=>{ if(selected?.id!==m.id) e.currentTarget.style.background='transparent'; }}
+              >
+                {!m.isRead && <span style={{position:'absolute',top:16,right:12,width:7,height:7,borderRadius:'50%',background:'var(--crimson-500)',display:'block'}} />}
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
+                  <span style={{fontFamily:'var(--font-display)',fontWeight:m.isRead?400:700,fontSize:13,letterSpacing:'.04em',color:m.isRead?'var(--fg-2)':'var(--fg-1)',textTransform:'uppercase'}}>{m.name}</span>
+                  <span style={{fontFamily:'var(--font-mono)',fontSize:9,color:'var(--fg-3)',letterSpacing:'.08em'}}>{fmt(m.createdAt)}</span>
+                </div>
+                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:3}}>{m.subject}</div>
+                <div style={{fontFamily:'var(--font-sans)',fontSize:12,color:'var(--fg-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{m.body}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Détail */}
+          {selected ? (
+            <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,padding:'24px'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16}}>
+                <div>
+                  <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)'}}>{selected.name}</div>
+                  <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',marginTop:2}}>{selected.email}</div>
+                  <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2,letterSpacing:'.08em'}}>{fmt(selected.createdAt)}</div>
+                </div>
+                <button onClick={()=>{ if(confirm('Supprimer ce message ?')) del(selected); }} style={T.btnD}>🗑 Supprimer</button>
+              </div>
+              <div style={{height:1,background:'var(--border)',marginBottom:16}} />
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:8}}>Sujet</div>
+              <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:15,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:16}}>{selected.subject}</div>
+              <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:8}}>Message</div>
+              <div style={{fontFamily:'var(--font-sans)',fontSize:14,lineHeight:1.7,color:'var(--fg-2)',whiteSpace:'pre-wrap'}}>{selected.body}</div>
+              <div style={{marginTop:20}}>
+                <a href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
+                  style={{...S.btnP,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>
+                  ✉ Répondre par email
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div style={{background:'var(--ink-850)',border:'1px dashed var(--border)',borderRadius:12,padding:'60px 24px',textAlign:'center',color:'var(--fg-3)',fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.16em',textTransform:'uppercase'}}>
+              Sélectionner un message
+            </div>
+          )}
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // ── Section : Licences ───────────────────────────────────────────────────────
 const LicencesSection = () => {

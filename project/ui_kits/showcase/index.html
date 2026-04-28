@@ -18,6 +18,7 @@
 <div id="root"></div>
 
 <script src="../beatData.js"></script>
+<script type="text/babel" src="../LicenceModal.jsx"></script>
 <script type="text/babel" src="../AudioPlayer.jsx"></script>
 <script type="text/babel" src="Carousel3D.jsx"></script>
 <script type="text/babel" src="Nav.jsx"></script>
@@ -28,7 +29,8 @@
 <script type="text/babel">
   const App = () => {
     const [playing, setPlaying] = React.useState(null);
-    const [beats, setBeats] = React.useState([]);
+    const [beats, setBeats]     = React.useState([]);
+    const [buyBeat, setBuyBeat] = React.useState(null);
 
     React.useEffect(() => {
       window.loadBeats().then(setBeats).catch(console.error);
@@ -40,7 +42,8 @@
         <Hero setPlaying={setPlaying} beats={beats} />
         <FigureRail setPlaying={setPlaying} beats={beats} />
         <Footer />
-        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} />
+        <AudioPlayer beat={playing} onClose={() => setPlaying(null)} onBuy={setBuyBeat} />
+        <LicenceModal beat={buyBeat} onClose={() => setBuyBeat(null)} />
       </>
     );
   };

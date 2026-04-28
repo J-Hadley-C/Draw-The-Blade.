@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khen Fu · Contact</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink-950); color: var(--fg-1); min-height: 100%; }
+  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  #root { min-height: 100vh; display: flex; flex-direction: column; }
+
+  input, textarea {
+    background: var(--ink-800); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--fg-1);
+    font-family: var(--font-mono); font-size: 13px;
+    padding: 12px 14px; width: 100%; outline: none;
+    transition: border-color .15s;
+  }
+  input:focus, textarea:focus { border-color: var(--crimson-500); }
+  textarea { resize: vertical; min-height: 140px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const API = 'http://127.0.0.1:8000/api/messages';
+
+const ContactPage = () => {
+  const prefill = new URLSearchParams(window.location.search).get('subject') || '';
+  const [form, setForm]     = React.useState({ name:'', email:'', subject: prefill, body:'' });
+  const [status, setStatus] = React.useState(null); // null | 'sending' | 'ok' | 'err'
+  const set = (k, v) => setForm(f => ({...f, [k]: v}));
+
+  const submit = async e => {
+    e.preventDefault();
+    setStatus('sending');
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error();
+      setStatus('ok');
+      setForm({ name:'', email:'', subject:'', body:'' });
+    } catch {
+      setStatus('err');
+    }
+  };
+
+  return (
+    <div style={{minHeight:'100vh', display:'flex', flexDirection:'column'}}>
+
+      {/* Nav */}
+      <nav style={ns.nav}>
+        <a href="../showcase/index.html" style={ns.logo}>
+          <div style={ns.word}>KHEN FU</div>
+          <div style={ns.sub}>音楽 · beats</div>
+        </a>
+        <div style={ns.links}>
+          <a href="../showcase/index.html" style={ns.link}>♪ Showcase</a>
+          <a href="../codex/index.html" style={ns.link}>Catalogue</a>
+          <span style={{...ns.link, color:'var(--ember-400)'}}>Contact</span>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <div style={ns.hero}>
+        <div style={ns.heroBg} aria-hidden="true" />
+        <div style={ns.heroVig} aria-hidden="true" />
+        <div style={ns.heroContent}>
+          <div style={ns.eye}>✉ formulaire de contact</div>
+          <h1 style={ns.title}>Parlons<br />business.</h1>
+          <p style={ns.sub2}>Collab, commande personnalisée, licence, ou simplement dire bonjour —<br/>je réponds sous 48h.</p>
+        </div>
+      </div>
+
+      {/* Formulaire */}
+      <main style={ns.main}>
+        <div style={ns.card}>
+
+          {status === 'ok' ? (
+            <div style={ns.success}>
+              <div style={{fontSize:40, marginBottom:16}}>✓</div>
+              <div style={{fontFamily:'var(--font-display)', fontWeight:700, fontSize:22, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--fg-1)', marginBottom:8}}>Message envoyé</div>
+              <div style={{fontFamily:'var(--font-sans)', fontSize:14, color:'var(--fg-3)', lineHeight:1.6, marginBottom:24}}>Je te répondrai sous 48h. Merci de m'avoir contacté.</div>
+              <button onClick={() => setStatus(null)} style={ns.btnG}>Envoyer un autre message</button>
+            </div>
+          ) : (
+            <form onSubmit={submit} style={{display:'flex', flexDirection:'column', gap:16}}>
+              <div>
+                <div style={ns.eyeForm}>◈ nouveau message</div>
+                <h2 style={{fontFamily:'var(--font-display)', fontWeight:700, fontSize:24, letterSpacing:'.08em', textTransform:'uppercase', margin:'4px 0 0', color:'var(--fg-1)'}}>Contact</h2>
+              </div>
+
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+                <div style={ns.field}>
+                  <label style={ns.lbl}>Nom</label>
+                  <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ton nom" required />
+                </div>
+                <div style={ns.field}>
+                  <label style={ns.lbl}>Email</label>
+                  <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="ton@email.com" required />
+                </div>
+              </div>
+
+              <div style={ns.field}>
+                <label style={ns.lbl}>Sujet</label>
+                <input value={form.subject} onChange={e=>set('subject',e.target.value)} placeholder="Collab / Commande / Licence / Autre" required />
+              </div>
+
+              <div style={ns.field}>
+                <label style={ns.lbl}>Message</label>
+                <textarea value={form.body} onChange={e=>set('body',e.target.value)} placeholder="Décris ton projet, ta demande..." required />
+              </div>
+
+              {status === 'err' && (
+                <div style={{fontFamily:'var(--font-mono)', fontSize:11, color:'var(--crimson-400)', letterSpacing:'.14em', textTransform:'uppercase'}}>
+                  ✕ Erreur d'envoi — vérifie ta connexion et réessaie.
+                </div>
+              )}
+
+              <div style={{display:'flex', gap:12, marginTop:4}}>
+                <button type="submit" disabled={status==='sending'} style={ns.btnP}>
+                  {status==='sending' ? 'Envoi…' : '✉ Envoyer le message'}
+                </button>
+                <a href="../showcase/index.html" style={{...ns.btnG, textDecoration:'none', display:'inline-flex', alignItems:'center'}}>← Retour</a>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* Infos contact */}
+        <div style={ns.info}>
+          <div style={ns.infoCard}>
+            <div style={ns.eyeForm}>◈ autres moyens</div>
+            <div style={{display:'flex', flexDirection:'column', gap:14, marginTop:12}}>
+              {[
+                { icon:'♪', label:'Beats & licences', val:'Via ce formulaire' },
+                { icon:'◈', label:'Collabs', val:'Via ce formulaire' },
+                { icon:'↗', label:'Instagram', val:'@khenfu' },
+              ].map(r => (
+                <div key={r.label} style={{display:'flex', gap:12, alignItems:'flex-start'}}>
+                  <span style={{color:'var(--ember-400)', fontSize:14, flexShrink:0, marginTop:1}}>{r.icon}</span>
+                  <div>
+                    <div style={{fontFamily:'var(--font-mono)', fontSize:10, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--fg-3)'}}>{r.label}</div>
+                    <div style={{fontFamily:'var(--font-sans)', fontSize:13, color:'var(--fg-1)', marginTop:2}}>{r.val}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={ns.infoCard}>
+            <div style={ns.eyeForm}>◈ temps de réponse</div>
+            <div style={{fontFamily:'var(--font-display)', fontWeight:700, fontSize:32, color:'var(--crimson-400)', letterSpacing:'.04em', margin:'10px 0 4px'}}>48h</div>
+            <div style={{fontFamily:'var(--font-sans)', fontSize:13, color:'var(--fg-3)', lineHeight:1.6}}>Je réponds à chaque message personnellement. Projets sérieux uniquement.</div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer style={ns.footer}>
+        <span style={{fontFamily:'var(--font-mono)', fontSize:10, letterSpacing:'.2em', textTransform:'uppercase', color:'var(--fg-3)'}}>© 2026 · Khen Fu · tous droits réservés</span>
+      </footer>
+    </div>
+  );
+};
+
+const ns = {
+  nav:  { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 40px', borderBottom:'1px solid var(--border)', background:'var(--ink-950)', position:'sticky', top:0, zIndex:10 },
+  logo: { textDecoration:'none', display:'flex', flexDirection:'column', gap:3, lineHeight:1 },
+  word: { fontFamily:'var(--font-display)', fontWeight:900, fontSize:18, letterSpacing:'.26em', color:'var(--fg-1)', textTransform:'uppercase' },
+  sub:  { fontFamily:'var(--font-mono)', fontSize:10, color:'var(--crimson-500)', letterSpacing:'.18em' },
+  links:{ display:'flex', gap:32 },
+  link: { fontFamily:'var(--font-mono)', fontSize:11, letterSpacing:'.24em', color:'var(--fg-2)', textDecoration:'none', textTransform:'uppercase' },
+  hero: { position:'relative', padding:'72px 56px 80px', overflow:'hidden', minHeight:320, display:'flex', alignItems:'center' },
+  heroBg: { position:'absolute', inset:0, backgroundImage:'url(../../assets/images/dojosabre.jpg)', backgroundSize:'cover', backgroundPosition:'center', zIndex:0 },
+  heroVig:{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(7,5,6,0.82) 0%, rgba(7,5,6,0.95) 100%)', zIndex:1 },
+  heroContent: { position:'relative', zIndex:2, maxWidth:600 },
+  eye:  { fontFamily:'var(--font-mono)', fontSize:11, letterSpacing:'.28em', color:'var(--ember-400)', textTransform:'uppercase', marginBottom:12, textShadow:'var(--glow-ember-sm)' },
+  title:{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:64, letterSpacing:'.06em', lineHeight:0.95, margin:'0 0 16px', textTransform:'uppercase', color:'var(--fg-1)' },
+  sub2: { fontFamily:'var(--font-serif)', fontWeight:300, fontSize:16, lineHeight:1.65, color:'var(--fg-2)', margin:0 },
+  main: { flex:1, display:'grid', gridTemplateColumns:'1fr 320px', gap:24, padding:'40px 56px', maxWidth:1100, width:'100%', margin:'0 auto', alignItems:'start' },
+  card: { background:'var(--ink-850)', border:'1px solid var(--border)', borderRadius:12, padding:'32px' },
+  success:{ textAlign:'center', padding:'40px 20px' },
+  info: { display:'flex', flexDirection:'column', gap:16 },
+  infoCard:{ background:'var(--ink-850)', border:'1px solid var(--border)', borderRadius:12, padding:'24px' },
+  field:{ display:'flex', flexDirection:'column', gap:6 },
+  lbl:  { fontFamily:'var(--font-mono)', fontSize:10, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--fg-3)' },
+  eyeForm:{ fontFamily:'var(--font-mono)', fontSize:10, letterSpacing:'.24em', textTransform:'uppercase', color:'var(--ember-400)' },
+  btnP: { fontFamily:'var(--font-display)', fontWeight:600, fontSize:12, letterSpacing:'.2em', textTransform:'uppercase', padding:'13px 24px', borderRadius:4, background:'var(--crimson-600)', color:'var(--bone-50)', border:'1px solid var(--crimson-700)', boxShadow:'var(--glow-crimson-md)', cursor:'pointer' },
+  btnG: { fontFamily:'var(--font-mono)', fontSize:11, letterSpacing:'.16em', textTransform:'uppercase', padding:'13px 18px', borderRadius:4, background:'transparent', color:'var(--fg-2)', border:'1px solid var(--border)', cursor:'pointer' },
+  footer:{ borderTop:'1px solid var(--border)', padding:'20px 56px', display:'flex', justifyContent:'center' },
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ContactPage />);
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 // AudioPlayer.jsx — lecteur audio persistant, barre fixe en bas de page
-const AudioPlayer = ({ beat, onClose }) => {
+const AudioPlayer = ({ beat, onClose, onBuy }) => {
   const audioRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
@@ -99,7 +99,7 @@ const AudioPlayer = ({ beat, onClose }) => {
             ⬇ Gratuit
           </button>
         )}
-        <button style={apStyles.btnPrimary}>
+        <button onClick={() => onBuy && onBuy(beat)} style={apStyles.btnPrimary}>
           Acheter · {beat.price} €
         </button>
       </div>
