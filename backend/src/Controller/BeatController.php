@@ -53,6 +53,27 @@ class BeatController extends AbstractController
         return new Response(null, 204);
     }
 
+    #[Route('/{id}/play', name: 'play', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function incrementPlay(Beat $beat): Response
+    {
+        $beat->setPlayCount($beat->getPlayCount() + 1);
+        $this->em->flush();
+        return new Response(json_encode(['playCount' => $beat->getPlayCount()]), 200, ['Content-Type' => 'application/json']);
+    }
+
+    #[Route('/{id}/like', name: 'like', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function like(Beat $beat, Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+        if (($data['type'] ?? 'up') === 'down') {
+            $beat->setLikesDown($beat->getLikesDown() + 1);
+        } else {
+            $beat->setLikesUp($beat->getLikesUp() + 1);
+        }
+        $this->em->flush();
+        return new Response(json_encode(['likesUp' => $beat->getLikesUp(), 'likesDown' => $beat->getLikesDown()]), 200, ['Content-Type' => 'application/json']);
+    }
+
     #[Route('/{id}/stream', name: 'stream', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function streamAudio(Beat $beat): Response
     {

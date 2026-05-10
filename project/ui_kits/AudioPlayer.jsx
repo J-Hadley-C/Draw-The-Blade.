@@ -1,13 +1,21 @@
 // AudioPlayer.jsx — lecteur audio persistant, barre fixe en bas de page
 const AudioPlayer = ({ beat, onClose, onBuy }) => {
   const audioRef = React.useRef(null);
+  const trackedRef = React.useRef(null);
   const [playing, setPlaying] = React.useState(false);
   const [progress, setProgress] = React.useState(0);
   const [vol, setVol] = React.useState(0.8);
+  const [plays, setPlays] = React.useState(0);
+  const [likesUp, setLikesUp] = React.useState(0);
+  const [likesDown, setLikesDown] = React.useState(0);
 
   React.useEffect(() => {
     setPlaying(false);
     setProgress(0);
+    setPlays(beat ? (beat.playCount || 0) : 0);
+    setLikesUp(beat ? (beat.likesUp || 0) : 0);
+    setLikesDown(beat ? (beat.likesDown || 0) : 0);
+    trackedRef.current = null;
     if (audioRef.current) {
       audioRef.current.pause();
       if (beat && beat.audio) {
@@ -25,7 +33,28 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
     } else {
       audioRef.current.play().catch(() => {});
       setPlaying(true);
+      if (trackedRef.current !== beat.id) {
+        trackedRef.current = beat.id;
+        fetch(`${API_BASE}/api/beats/${beat.id}/play`, { method: 'POST' })
+          .then(r => r.json())
+          .then(d => setPlays(d.playCount))
+          .catch(() => {});
+      }
     }
+  };
+
+  const handleLike = (type) => {
+    if (!beat) return;
+    fetch(`${API_BASE}/api/beats/${beat.id}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type }),
+    })
+      .then(r => r.json())
+      .then(d => { setLikesUp(d.likesUp); setLikesDown(d.likesDown); })
+      .catch(() => {});
+    if (type === 'up') setLikesUp(n => n + 1);
+    else setLikesDown(n => n + 1);
   };
 
   const onTimeUpdate = () => {
@@ -74,6 +103,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
         <div style={apStyles.metaRow}>
           <span style={{ ...apStyles.genre, background: genreColor[beat.genre] || '#a3161f' }}>{beat.genre}</span>
           <span style={apStyles.dim}>{beat.bpm} BPM · {beat.key} · {beat.duration}</span>
+          <span style={apStyles.plays}>▶ {plays}</span>
         </div>
       </div>
 
@@ -91,6 +121,15 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
           <span style={apStyles.volIcon}>🔊</span>
           <input type="range" min="0" max="1" step="0.05" value={vol} onChange={changeVol} style={apStyles.volSlider} aria-label="Volume" />
         </div>
+      </div>
+
+      <div style={apStyles.likes}>
+        <button onClick={() => handleLike('up')} style={apStyles.likeBtn} title="J'aime">
+          👍 <span style={apStyles.likeCount}>{likesUp}</span>
+        </button>
+        <button onClick={() => handleLike('down')} style={apStyles.likeBtn} title="J'aime pas">
+          👎 <span style={apStyles.likeCount}>{likesDown}</span>
+        </button>
       </div>
 
       <div style={apStyles.actions}>
@@ -145,6 +184,10 @@ const apStyles = {
   volWrap: { display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 },
   volIcon: { fontSize: 12 },
   volSlider: { width: 70, cursor: 'pointer' },
+  plays: { fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.14em', color: 'var(--ember-400)', marginLeft: 4 },
+  likes: { display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' },
+  likeBtn: { background: 'transparent', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--fg-2)', fontSize: 12, padding: '5px 9px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, transition: 'border-color .2s' },
+  likeCount: { fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)' },
   actions: { display: 'flex', gap: 8, flexShrink: 0 },
   btnGhost: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', padding: '8px 14px', borderRadius: 4, background: 'transparent', color: 'var(--fg-2)', border: '1px solid var(--border)', cursor: 'pointer' },
   btnPrimary: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 4, background: 'var(--crimson-600)', color: 'var(--bone-50)', border: '1px solid var(--crimson-700)', boxShadow: 'var(--glow-crimson-sm)', cursor: 'pointer' },

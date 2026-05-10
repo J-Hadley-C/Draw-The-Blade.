@@ -70,6 +70,18 @@ class Beat
     #[Groups(['beat:read', 'beat:write'])]
     private int $position = 0;
 
+    #[ORM\Column(options: ['default' => 0])]
+    #[Groups(['beat:read'])]
+    private int $playCount = 0;
+
+    #[ORM\Column(options: ['default' => 0])]
+    #[Groups(['beat:read'])]
+    private int $likesUp = 0;
+
+    #[ORM\Column(options: ['default' => 0])]
+    #[Groups(['beat:read'])]
+    private int $likesDown = 0;
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['beat:read'])]
     private \DateTimeImmutable $createdAt;
@@ -206,6 +218,15 @@ class Beat
 
     public function getPosition(): int { return $this->position; }
     public function setPosition(int $position): self { $this->position = $position; return $this; }
+
+    public function getPlayCount(): int { return $this->playCount; }
+    public function setPlayCount(int $playCount): self { $this->playCount = $playCount; return $this; }
+
+    public function getLikesUp(): int { return $this->likesUp; }
+    public function setLikesUp(int $likesUp): self { $this->likesUp = $likesUp; return $this; }
+
+    public function getLikesDown(): int { return $this->likesDown; }
+    public function setLikesDown(int $likesDown): self { $this->likesDown = $likesDown; return $this; }
 
     public function getCreatedAt(): \DateTimeImmutable
     {
