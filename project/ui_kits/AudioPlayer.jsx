@@ -121,7 +121,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
           aria-label="Position de lecture"
           aria-valuemin="0"
           aria-valuemax="100"
-          aria-valuenow={`${Math.round(progress)}`}
+          aria-valuenow={Math.round(progress)}
           onKeyDown={e => {
             if (!audioRef.current || !beat || !beat.audio) return;
             if (e.key === 'ArrowRight') audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
