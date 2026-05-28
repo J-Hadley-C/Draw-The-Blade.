@@ -348,6 +348,55 @@
     const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
     const GC = { Trap: '#a3161f', Drill: '#7c1d6f', SexyDrill: '#c0185e', BB: '#1a5c3a', 'R&B': '#1a3a6b', Afrobeat: '#7a4a00', Kompa: '#0a4a6b' };
 
+    const STORAGE_KEY = 'kf_admin_token';
+
+    const LoginScreen = ({ onAuth }) => {
+      const [token, setToken] = React.useState('');
+      const [err, setErr]     = React.useState(false);
+      const [loading, setLoading] = React.useState(false);
+
+      const attempt = async e => {
+        e.preventDefault();
+        setErr(false);
+        setLoading(true);
+        try {
+          const res = await fetch(`${API_BASE}/api/messages`, {
+            headers: { 'X-Admin-Token': token }
+          });
+          if (res.ok) {
+            localStorage.setItem(STORAGE_KEY, token);
+            onAuth(token);
+          } else {
+            setErr(true);
+          }
+        } catch {
+          setErr(true);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)' }}>
+          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--border)', borderRadius: 12, padding: 40, width: 340, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 8 }}>Admin · Khen Fu</div>
+            <input
+              type="password"
+              placeholder="Token d'accès"
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              style={{ background: 'var(--ink-800)', border: `1px solid ${err ? 'var(--crimson-500)' : 'var(--border)'}`, borderRadius: 6, color: 'var(--fg-1)', fontFamily: 'var(--font-mono)', fontSize: 13, padding: '12px 14px', outline: 'none', width: '100%' }}
+              autoFocus
+            />
+            {err && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--crimson-500)', letterSpacing: '.1em' }}>Token invalide</span>}
+            <button type="submit" disabled={loading || !token} style={{ fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', padding: '10px 0', borderRadius: 4, background: 'var(--crimson-600)', color: 'var(--bone-50)', border: 'none', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+              {loading ? 'Vérification…' : 'Entrer'}
+            </button>
+          </form>
+        </div>
+      );
+    };
+
     function imgSrc(beat) {
       if (!beat.imagePath) return null;
       if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
@@ -394,7 +443,7 @@
     // ── BeatForm ─────────────────────────────────────────────────────────────────
     const EMPTY = { title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
 
-    const BeatForm = ({ beat, onClose, onSaved }) => {
+    const BeatForm = ({ beat, onClose, onSaved, adminToken }) => {
       const isEdit = !!beat;
       const [form, setForm] = React.useState(isEdit ? {
         title: beat.title, genre: beat.genre, bpm: String(beat.bpm),
@@ -416,7 +465,7 @@
           if (coverFile) fd.append('coverImage', coverFile);
           if (audioFile) fd.append('audioFile', audioFile);
           const url = isEdit ? `${API}/${beat.id}` : API;
-          const res = await fetch(url, { method: 'POST', body: fd });
+          const res = await fetch(url, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
           if (!res.ok) throw new Error(await res.text());
           onSaved(await res.json(), isEdit);
         } catch (err) { alert('Erreur : ' + err.message); }
@@ -670,14 +719,14 @@
     // ── Section : Messages ───────────────────────────────────────────────────────
     const MSG_API = `${window.APP_CONFIG.API_BASE}/api/messages`;
 
-    const MessagesSection = () => {
+    const MessagesSection = ({ adminToken }) => {
       const [messages, setMessages] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
       const [selected, setSelected] = React.useState(null);
 
       const load = async () => {
         setLoading(true);
-        try { setMessages(await (await fetch(MSG_API)).json()); }
+        try { setMessages(await (await fetch(MSG_API, { headers: { 'X-Admin-Token': adminToken } })).json()); }
         catch { /* silencieux */ }
         finally { setLoading(false); }
       };
@@ -686,13 +735,13 @@
 
       const markRead = async msg => {
         if (msg.isRead) return;
-        await fetch(`${MSG_API}/${msg.id}/read`, { method: 'PATCH' });
+        await fetch(`${MSG_API}/${msg.id}/read`, { method: 'PATCH', headers: { 'X-Admin-Token': adminToken } });
         setMessages(ms => ms.map(m => m.id === msg.id ? { ...m, isRead: true } : m));
         if (selected?.id === msg.id) setSelected({ ...msg, isRead: true });
       };
 
       const del = async msg => {
-        await fetch(`${MSG_API}/${msg.id}`, { method: 'DELETE' });
+        await fetch(`${MSG_API}/${msg.id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
         setMessages(ms => ms.filter(m => m.id !== msg.id));
         if (selected?.id === msg.id) setSelected(null);
       };
@@ -897,6 +946,10 @@
 
     // ── App ──────────────────────────────────────────────────────────────────────
     const App = () => {
+      const [adminToken, setAdminToken] = React.useState(() => localStorage.getItem(STORAGE_KEY) || '');
+
+      if (!adminToken) return <LoginScreen onAuth={setAdminToken} />;
+
       const [section, setSection] = React.useState('overview');
       const [beats, setBeats] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
@@ -923,7 +976,7 @@
 
       const handleDelete = async beat => {
         try {
-          await fetch(`${API}/${beat.id}`, { method: 'DELETE' });
+          await fetch(`${API}/${beat.id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
           setBeats(b => b.filter(x => x.id !== beat.id));
           showToast(`${beat.title} supprimé`);
         } catch { showToast('Erreur suppression', true); }
@@ -932,7 +985,7 @@
       const handleToggleCarousel = async (beat, val) => {
         try {
           const fd = new FormData(); fd.append('inCarousel', val);
-          await fetch(`${API}/${beat.id}`, { method: 'POST', body: fd });
+          await fetch(`${API}/${beat.id}`, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
           setBeats(b => b.map(x => x.id === beat.id ? { ...x, inCarousel: val } : x));
         } catch { showToast('Erreur', true); }
       };
@@ -949,7 +1002,7 @@
         const positions = reordered.map((b, i) => ({ id: b.id, position: i }));
         setBeats(reordered); setDragSrc(null); setDragOver(null);
         try {
-          await fetch(`${API}/reorder`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(positions) });
+          await fetch(`${API}/reorder`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken }, body: JSON.stringify(positions) });
           showToast('Ordre sauvegardé');
         } catch { showToast('Erreur sauvegarde ordre', true); load(); }
       };
@@ -965,12 +1018,12 @@
             {section === 'catalogue' && <CatalogueSection beats={beats} loading={loading} onEdit={setDrawer} onDelete={handleDelete}
               onToggleCarousel={handleToggleCarousel} onDragStart={handleDragStart} onDragOver={handleDragOver}
               onDrop={handleDrop} dragOver={dragOver} onNew={() => setDrawer('new')} />}
-            {section === 'messages' && <MessagesSection />}
+            {section === 'messages' && <MessagesSection adminToken={adminToken} />}
             {section === 'licences' && <LicencesSection />}
             {section === 'parametres' && <ParametresSection />}
           </div>
 
-          {drawer && <BeatForm beat={drawer === 'new' ? null : drawer} onClose={() => setDrawer(null)} onSaved={handleSaved} />}
+          {drawer && <BeatForm beat={drawer === 'new' ? null : drawer} onClose={() => setDrawer(null)} onSaved={handleSaved} adminToken={adminToken} />}
           {toast && <Toast msg={toast.msg} err={toast.err} onDone={() => setToast(null)} />}
         </div>
       );
