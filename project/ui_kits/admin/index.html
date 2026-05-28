@@ -719,15 +719,18 @@
     // ── Section : Messages ───────────────────────────────────────────────────────
     const MSG_API = `${window.APP_CONFIG.API_BASE}/api/messages`;
 
-    const MessagesSection = ({ adminToken }) => {
+    const MessagesSection = ({ adminToken, onShowToast }) => {
       const [messages, setMessages] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
       const [selected, setSelected] = React.useState(null);
 
       const load = async () => {
         setLoading(true);
-        try { setMessages(await (await fetch(MSG_API, { headers: { 'X-Admin-Token': adminToken } })).json()); }
-        catch { /* silencieux */ }
+        try {
+          const res = await fetch(MSG_API, { headers: { 'X-Admin-Token': adminToken } });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          setMessages(await res.json());
+        } catch { /* silencieux */ }
         finally { setLoading(false); }
       };
 
@@ -735,15 +738,32 @@
 
       const markRead = async msg => {
         if (msg.isRead) return;
-        await fetch(`${MSG_API}/${msg.id}/read`, { method: 'PATCH', headers: { 'X-Admin-Token': adminToken } });
-        setMessages(ms => ms.map(m => m.id === msg.id ? { ...m, isRead: true } : m));
-        if (selected?.id === msg.id) setSelected({ ...msg, isRead: true });
+        try {
+          const res = await fetch(`${MSG_API}/${msg.id}/read`, {
+            method: 'PATCH',
+            headers: { 'X-Admin-Token': adminToken },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          setMessages(ms => ms.map(m => m.id === msg.id ? { ...m, isRead: true } : m));
+          if (selected?.id === msg.id) setSelected({ ...msg, isRead: true });
+        } catch {
+          // Silencieux pour les marquer comme lus, juste pour les cas d'erreur réseau
+        }
       };
 
       const del = async msg => {
-        await fetch(`${MSG_API}/${msg.id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
-        setMessages(ms => ms.filter(m => m.id !== msg.id));
-        if (selected?.id === msg.id) setSelected(null);
+        try {
+          const res = await fetch(`${MSG_API}/${msg.id}`, {
+            method: 'DELETE',
+            headers: { 'X-Admin-Token': adminToken },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          setMessages(ms => ms.filter(m => m.id !== msg.id));
+          if (selected?.id === msg.id) setSelected(null);
+          if (onShowToast) onShowToast('Message supprimé', false);
+        } catch {
+          if (onShowToast) onShowToast('Erreur — suppression échouée', true);
+        }
       };
 
       const unread = messages.filter(m => !m.isRead).length;
@@ -970,7 +990,11 @@
 
       const load = async () => {
         setLoading(true);
-        try { setBeats(await (await fetch(API)).json()); }
+        try {
+          const res = await fetch(API);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          setBeats(await res.json());
+        }
         catch { showToast('Impossible de charger les beats', true); }
         finally { setLoading(false); }
       };
@@ -984,7 +1008,8 @@
 
       const handleDelete = async beat => {
         try {
-          await fetch(`${API}/${beat.id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
+          const res = await fetch(`${API}/${beat.id}`, { method: 'DELETE', headers: { 'X-Admin-Token': adminToken } });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           setBeats(b => b.filter(x => x.id !== beat.id));
           showToast(`${beat.title} supprimé`);
         } catch { showToast('Erreur suppression', true); }
@@ -993,7 +1018,8 @@
       const handleToggleCarousel = async (beat, val) => {
         try {
           const fd = new FormData(); fd.append('inCarousel', val);
-          await fetch(`${API}/${beat.id}`, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
+          const res = await fetch(`${API}/${beat.id}`, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           setBeats(b => b.map(x => x.id === beat.id ? { ...x, inCarousel: val } : x));
         } catch { showToast('Erreur', true); }
       };
@@ -1010,7 +1036,8 @@
         const positions = reordered.map((b, i) => ({ id: b.id, position: i }));
         setBeats(reordered); setDragSrc(null); setDragOver(null);
         try {
-          await fetch(`${API}/reorder`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken }, body: JSON.stringify(positions) });
+          const res = await fetch(`${API}/reorder`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken }, body: JSON.stringify(positions) });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           showToast('Ordre sauvegardé');
         } catch { showToast('Erreur sauvegarde ordre', true); load(); }
       };
@@ -1026,7 +1053,7 @@
             {section === 'catalogue' && <CatalogueSection beats={beats} loading={loading} onEdit={setDrawer} onDelete={handleDelete}
               onToggleCarousel={handleToggleCarousel} onDragStart={handleDragStart} onDragOver={handleDragOver}
               onDrop={handleDrop} dragOver={dragOver} onNew={() => setDrawer('new')} />}
-            {section === 'messages' && <MessagesSection adminToken={adminToken} />}
+            {section === 'messages' && <MessagesSection adminToken={adminToken} onShowToast={showToast} />}
             {section === 'licences' && <LicencesSection />}
             {section === 'parametres' && <ParametresSection />}
           </div>
