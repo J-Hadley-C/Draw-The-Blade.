@@ -37,6 +37,10 @@ class MessageController extends AbstractController
             return new Response(json_encode(['error' => 'Champs manquants']), 400, ['Content-Type' => 'application/json']);
         }
 
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return new Response(json_encode(['error' => 'Format email invalide']), 400, ['Content-Type' => 'application/json']);
+        }
+
         $message = (new Message())
             ->setName(trim($data['name']))
             ->setEmail(trim($data['email']))

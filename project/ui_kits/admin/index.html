@@ -808,10 +808,18 @@
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 8 }}>Message</div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--fg-2)', whiteSpace: 'pre-wrap' }}>{selected.body}</div>
                   <div style={{ marginTop: 20 }}>
-                    <a href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
-                      style={{ ...S.btnP, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                      ✉ Répondre par email
-                    </a>
+                    {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(selected.email) ? (
+                      <a
+                        href={`mailto:${encodeURIComponent(selected.email)}?subject=Re%3A%20${encodeURIComponent(selected.subject || '')}`}
+                        style={{ color: 'var(--crimson-500)', fontFamily: 'var(--font-mono)', fontSize: 12, textDecoration: 'none' }}
+                      >
+                        ✉ Répondre par email
+                      </a>
+                    ) : (
+                      <span style={{ color: 'var(--fg-3)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                        Email non valide
+                      </span>
+                    )}
                   </div>
                 </div>
               ) : (
