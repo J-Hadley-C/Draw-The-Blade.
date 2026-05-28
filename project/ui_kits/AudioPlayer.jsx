@@ -8,6 +8,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
   const [plays, setPlays] = React.useState(0);
   const [likesUp, setLikesUp] = React.useState(0);
   const [likesDown, setLikesDown] = React.useState(0);
+  const [liking, setLiking] = React.useState(false);
 
   React.useEffect(() => {
     setPlaying(false);
@@ -43,18 +44,24 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
     }
   };
 
-  const handleLike = (type) => {
-    if (!beat) return;
-    fetch(`${window.APP_CONFIG.API_BASE}/api/beats/${beat.id}/like`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type }),
-    })
-      .then(r => r.json())
-      .then(d => { setLikesUp(d.likesUp); setLikesDown(d.likesDown); })
-      .catch(() => {});
-    if (type === 'up') setLikesUp(n => n + 1);
-    else setLikesDown(n => n + 1);
+  const handleLike = async (type) => {
+    if (!beat || liking) return;
+    setLiking(true);
+    try {
+      const res = await fetch(`${window.APP_CONFIG.API_BASE}/api/beats/${beat.id}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      if (!res.ok) throw new Error();
+      const d = await res.json();
+      setLikesUp(d.likesUp);
+      setLikesDown(d.likesDown);
+    } catch {
+      // silent — do not update local state if request failed
+    } finally {
+      setLiking(false);
+    }
   };
 
   const onTimeUpdate = () => {
@@ -124,10 +131,20 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
       </div>
 
       <div style={apStyles.likes}>
-        <button onClick={() => handleLike('up')} style={apStyles.likeBtn} title="J'aime">
+        <button
+          onClick={() => handleLike('up')}
+          style={{ ...apStyles.likeBtn, opacity: liking ? 0.5 : 1 }}
+          disabled={liking}
+          aria-label={`J'aime — ${likesUp} votes`}
+        >
           👍 <span style={apStyles.likeCount}>{likesUp}</span>
         </button>
-        <button onClick={() => handleLike('down')} style={apStyles.likeBtn} title="J'aime pas">
+        <button
+          onClick={() => handleLike('down')}
+          style={{ ...apStyles.likeBtn, opacity: liking ? 0.5 : 1 }}
+          disabled={liking}
+          aria-label={`Je n'aime pas — ${likesDown} votes`}
+        >
           👎 <span style={apStyles.likeCount}>{likesDown}</span>
         </button>
       </div>
