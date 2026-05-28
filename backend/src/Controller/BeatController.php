@@ -42,11 +42,20 @@ class BeatController extends AbstractController
     #[Route('/reorder', name: 'reorder', methods: ['POST', 'PATCH'])]
     public function reorder(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true) ?? [];
+        $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            return new Response(json_encode(['error' => 'Format invalide']), 400, ['Content-Type' => 'application/json']);
+        }
+
         foreach ($data as $item) {
-            $beat = $this->beatRepository->find($item['id']);
+            if (!isset($item['id'], $item['position'])) continue;
+            if (!is_int($item['id']) && !ctype_digit((string) $item['id'])) continue;
+            $position = (int) $item['position'];
+            if ($position < 0) $position = 0;
+            $beat = $this->beatRepository->find((int) $item['id']);
             if ($beat) {
-                $beat->setPosition((int) $item['position']);
+                $beat->setPosition($position);
             }
         }
         $this->em->flush();
