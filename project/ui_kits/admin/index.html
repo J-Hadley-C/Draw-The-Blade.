@@ -268,8 +268,7 @@
       text-transform: uppercase;
       color: var(--fg-3);
       cursor: pointer;
-      transition: all .14s;
-      border-left: 2px solid transparent;
+      transition: background .14s, color .14s;
       -webkit-user-select: none;
       user-select: none;
     }
@@ -280,9 +279,13 @@
     }
 
     .nav-item.on {
-      color: var(--ember-400);
-      border-left-color: var(--crimson-500);
-      background: rgba(163, 22, 31, .08);
+      color: var(--bone-50);
+      background: rgba(163, 22, 31, .18);
+      box-shadow: inset 0 1px 0 rgba(163,22,31,.25), inset 0 -1px 0 rgba(163,22,31,.15);
+    }
+
+    .nav-item.on .icon {
+      color: var(--crimson-400);
     }
 
     .nav-item .icon {
@@ -291,24 +294,57 @@
       flex-shrink: 0;
     }
 
-    /* Stat cards */
-    .stat-grid {
+    /* Stat banner */
+    .stat-banner {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-
-    .stat-card {
-      background: var(--ink-850);
+      background: var(--ink-950);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 18px 20px;
+      overflow: hidden;
+      box-shadow: inset 0 -2px 0 rgba(163,22,31,.2), var(--shadow-md);
     }
 
-    /* Licence cards */
-    .lic-grid {
+    .stat-item {
+      padding: 28px 28px 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-item:nth-child(2) .stat-value { color: var(--ember-400); }
+    .stat-item:nth-child(3) .stat-value { color: var(--crimson-400); }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 60px;
+      color: var(--fg-1);
+      letter-spacing: .02em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+    }
+
+    .stat-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--fg-dim);
+      letter-spacing: .1em;
+      margin-top: 5px;
+    }
+
+    /* Licence layout */
+    .lic-layout {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 1.6fr;
       gap: 16px;
     }
 
@@ -325,6 +361,33 @@
     .lic-card.featured {
       border-color: var(--crimson-600);
       box-shadow: var(--glow-crimson-sm);
+    }
+
+    .lic-exclusive {
+      grid-column: 1 / -1;
+      background: var(--ink-950);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 32px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lic-exclusive::before {
+      content: '刀';
+      font-family: var(--font-brush);
+      font-size: 220px;
+      color: rgba(163,22,31,.06);
+      position: absolute;
+      right: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      line-height: 1;
+      pointer-events: none;
     }
   </style>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
@@ -376,9 +439,13 @@
       };
 
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)' }}>
-          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--border)', borderRadius: 12, padding: 40, width: 340, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 8 }}>Admin · Khen Fu</div>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)', backgroundImage: 'radial-gradient(ellipse 60% 40% at 50% 55%, rgba(163,22,31,.1) 0%, transparent 70%)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 10, letterSpacing: '.44em', textTransform: 'uppercase', color: 'var(--crimson-800)', marginBottom: 36, textAlign: 'center' }}>DRAW THE BLADE</div>
+          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--crimson-900)', borderRadius: 4, padding: 40, width: 320, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: 'var(--glow-crimson-sm), var(--shadow-lg)' }}>
+            <div style={{ marginBottom: 4 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 24, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-1)', lineHeight: 1 }}>KHEN FU</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.32em', textTransform: 'uppercase', color: 'var(--crimson-600)', marginTop: 5 }}>INTERFACE ADMIN</div>
+            </div>
             <input
               type="password"
               placeholder="Token d'accès"
@@ -442,7 +509,7 @@
     // ── BeatForm ─────────────────────────────────────────────────────────────────
     const EMPTY = { title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
 
-    const BeatForm = ({ beat, onClose, onSaved, adminToken }) => {
+    const BeatForm = ({ beat, onClose, onSaved, adminToken, onShowToast }) => {
       const isEdit = !!beat;
       const [form, setForm] = React.useState(isEdit ? {
         title: beat.title, genre: beat.genre, bpm: String(beat.bpm),
@@ -467,7 +534,7 @@
           const res = await fetch(url, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
           if (!res.ok) throw new Error(await res.text());
           onSaved(await res.json(), isEdit);
-        } catch (err) { alert('Erreur : ' + err.message); }
+        } catch (err) { if (onShowToast) onShowToast('Erreur : ' + err.message, true); }
         finally { setSaving(false); }
       };
 
@@ -590,11 +657,11 @@
       const genres = [...new Set(beats.map(b => b.genre))];
       const recent = [...beats].slice(0, 5);
 
-      const StatCard = ({ label, value, sub, color }) => (
-        <div className="stat-card">
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: 8 }}>{label}</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 36, color: color || 'var(--fg-1)', letterSpacing: '.04em', lineHeight: 1 }}>{value}</div>
-          {sub && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 6, letterSpacing: '.1em' }}>{sub}</div>}
+      const StatItem = ({ label, value, sub }) => (
+        <div className="stat-item">
+          <div className="stat-value">{value}</div>
+          <div className="stat-label">{label}</div>
+          {sub && <div className="stat-sub">{sub}</div>}
         </div>
       );
 
@@ -605,11 +672,11 @@
             <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 0' }}>Vue d'ensemble</h1>
           </div>
 
-          <div className="stat-grid" style={{ marginBottom: 32 }}>
-            <StatCard label="Beats total" value={beats.length} sub={`${genres.length} genres`} />
-            <StatCard label="Avec audio" value={withAudio} sub={`${beats.length - withAudio} sans fichier`} color="var(--ember-400)" />
-            <StatCard label="En carousel" value={carousel} sub="rotation showcase" color="var(--crimson-400)" />
-            <StatCard label="Gratuits" value={free} sub="version taguée" color="#4a9a6b" />
+          <div className="stat-banner" style={{ marginBottom: 32 }}>
+            <StatItem label="Beats" value={beats.length} sub={`${genres.length} genres`} />
+            <StatItem label="Audio" value={withAudio} sub={`${beats.length - withAudio} sans fichier`} />
+            <StatItem label="Carousel" value={carousel} sub="en rotation" />
+            <StatItem label="Gratuits" value={free} sub="version taguée" />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
@@ -656,8 +723,8 @@
           {/* Liens rapides */}
           <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
             <button onClick={() => onGoTo('catalogue')} style={S.btnP}>+ Nouveau beat</button>
-            <a href="../../showcase/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Showcase</a>
-            <a href="../../codex/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Catalogue</a>
+            <a href="../showcase/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Showcase</a>
+            <a href="../codex/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Catalogue</a>
           </div>
         </div>
       );
@@ -882,30 +949,62 @@
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 28 }}>
             Ces tarifs sont affichés sur la page d'achat publique
           </div>
-          <div className="lic-grid">
-            {licences.map(l => (
-              <div key={l.id} className={'lic-card' + (l.featured ? ' featured' : '')}>
-                {l.featured && (
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--crimson-400)', background: 'rgba(163,22,31,.15)', border: '1px solid var(--border-hot)', borderRadius: 999, padding: '3px 10px', alignSelf: 'flex-start' }}>
-                    ◈ Recommandé
-                  </div>
-                )}
+          <div className="lic-layout">
+            {/* Basique — compact */}
+            <div className="lic-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{l.label}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 4, letterSpacing: '.1em' }}>{l.tag}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{licences[0].label}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)', marginTop: 3, letterSpacing: '.1em' }}>{licences[0].tag}</div>
                 </div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 32, color: l.featured ? 'var(--crimson-400)' : 'var(--fg-1)', letterSpacing: '.04em' }}>{l.price}</div>
-                <div style={{ height: 1, background: 'var(--border)' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {l.features.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span style={{ color: 'var(--ember-400)', fontSize: 12, flexShrink: 0 }}>✓</span>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>{f}</span>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 28, color: 'var(--fg-2)', letterSpacing: '.04em', lineHeight: 1 }}>{licences[0].price}</div>
+              </div>
+              <div style={{ height: 1, background: 'var(--border)' }} />
+              {licences[0].features.map((f, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ color: 'var(--fg-3)', fontSize: 10, flexShrink: 0 }}>—</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.06em', color: 'var(--fg-3)' }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Premium — dominant */}
+            <div className="lic-card featured">
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--crimson-400)', background: 'rgba(163,22,31,.12)', border: '1px solid var(--border-hot)', borderRadius: 999, padding: '3px 10px', alignSelf: 'flex-start' }}>◈ Recommandé</div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{licences[1].label}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)', marginTop: 4, letterSpacing: '.1em' }}>{licences[1].tag}</div>
+              </div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 52, color: 'var(--crimson-400)', letterSpacing: '.02em', lineHeight: 1, textShadow: '0 0 20px rgba(224,70,81,.4)' }}>{licences[1].price}</div>
+              <div style={{ height: 1, background: 'var(--crimson-900)' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {licences[1].features.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ color: 'var(--ember-400)', fontSize: 12, flexShrink: 0 }}>✓</span>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Exclusivité — typographic strip */}
+            <div className="lic-exclusive">
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.3em', textTransform: 'uppercase', color: 'var(--ember-700)', marginBottom: 12 }}>◈ {licences[2].tag}</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 28, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 16 }}>{licences[2].label}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 24px' }}>
+                  {licences[2].features.map((f, i) => (
+                    <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.08em', color: 'var(--fg-3)', display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <span style={{ color: 'var(--ember-800)' }}>·</span>{f}
                     </div>
                   ))}
                 </div>
               </div>
-            ))}
+              <div style={{ textAlign: 'right', flexShrink: 0, position: 'relative', zIndex: 1 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 44, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--fg-1)', lineHeight: 1 }}>{licences[2].price}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--ember-800)', marginTop: 8 }}>DROITS EXCLUSIFS</div>
+              </div>
+            </div>
           </div>
           <div style={{ marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '.12em' }}>
             Pour modifier les tarifs ou les conditions, contactez le développeur.
@@ -943,9 +1042,10 @@
       return (
         <aside className="admin-sidebar">
           {/* Logo */}
-          <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, letterSpacing: '.26em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>KHEN FU</div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--crimson-500)', marginTop: 2 }}>Interface Admin</div>
+          <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(180deg, rgba(163,22,31,.06) 0%, transparent 100%)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 20, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-1)', lineHeight: 1 }}>KHEN FU</div>
+            <div style={{ fontFamily: 'var(--font-brush)', fontSize: 13, color: 'var(--crimson-700)', marginTop: 3, letterSpacing: '.04em', lineHeight: 1 }}>刃</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '.3em', textTransform: 'uppercase', color: 'var(--crimson-600)', marginTop: 4 }}>ADMIN</div>
           </div>
 
           {/* Navigation */}
@@ -963,7 +1063,7 @@
 
           {/* Footer */}
           <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-            <a href="../../showcase/index.html" target="_blank" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fg-3)', textDecoration: 'none' }}>
+            <a href="../showcase/index.html" target="_blank" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fg-3)', textDecoration: 'none' }}>
               <span>↗</span><span>Voir le site</span>
             </a>
           </div>
@@ -1057,7 +1157,7 @@
             {section === 'parametres' && <ParametresSection />}
           </div>
 
-          {drawer && <BeatForm beat={drawer === 'new' ? null : drawer} onClose={() => setDrawer(null)} onSaved={handleSaved} adminToken={adminToken} />}
+          {drawer && <BeatForm beat={drawer === 'new' ? null : drawer} onClose={() => setDrawer(null)} onSaved={handleSaved} adminToken={adminToken} onShowToast={showToast} />}
           {toast && <Toast msg={toast.msg} err={toast.err} onDone={() => setToast(null)} />}
         </div>
       );
