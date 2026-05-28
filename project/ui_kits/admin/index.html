@@ -810,7 +810,7 @@
                   <div style={{ marginTop: 20 }}>
                     {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(selected.email) ? (
                       <a
-                        href={`mailto:${encodeURIComponent(selected.email)}?subject=Re%3A%20${encodeURIComponent(selected.subject || '')}`}
+                        href={`mailto:${selected.email}?subject=Re%3A%20${encodeURIComponent(selected.subject || '')}`}
                         style={{ color: 'var(--crimson-500)', fontFamily: 'var(--font-mono)', fontSize: 12, textDecoration: 'none' }}
                       >
                         ✉ Répondre par email
