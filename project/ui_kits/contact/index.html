@@ -20,6 +20,12 @@
   }
   input:focus, textarea:focus { border-color: var(--crimson-500); }
   textarea { resize: vertical; min-height: 140px; }
+
+  @media (max-width: 700px) {
+    #contact-main  { grid-template-columns: 1fr !important; padding: 24px 16px !important; }
+    #contact-names { grid-template-columns: 1fr !important; }
+    #contact-aside { display: none !important; }
+  }
 </style>
 <script src="../config.js"></script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -82,7 +88,7 @@ const ContactPage = () => {
       </div>
 
       {/* Formulaire */}
-      <main style={ns.main}>
+      <main id="contact-main" style={ns.main}>
         <div style={ns.card}>
 
           {status === 'ok' ? (
@@ -99,7 +105,7 @@ const ContactPage = () => {
                 <h2 style={{fontFamily:'var(--font-display)', fontWeight:700, fontSize:24, letterSpacing:'.08em', textTransform:'uppercase', margin:'4px 0 0', color:'var(--fg-1)'}}>Contact</h2>
               </div>
 
-              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
+              <div id="contact-names" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
                 <div style={ns.field}>
                   <label style={ns.lbl}>Nom</label>
                   <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ton nom" required />
@@ -137,7 +143,7 @@ const ContactPage = () => {
         </div>
 
         {/* Infos contact */}
-        <div style={ns.info}>
+        <div id="contact-aside" style={ns.info}>
           <div style={ns.infoCard}>
             <div style={ns.eyeForm}>◈ autres moyens</div>
             <div style={{display:'flex', flexDirection:'column', gap:14, marginTop:12}}>
