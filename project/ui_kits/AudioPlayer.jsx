@@ -94,11 +94,6 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
     </div>
   );
 
-  const genreColor = {
-    Trap: '#a3161f', Drill: '#7c1d6f', SexyDrill: '#c0185e',
-    BB: '#1a5c3a', 'R&B': '#1a3a6b', Afrobeat: '#7a4a00', Kompa: '#0a4a6b',
-  };
-
   return (
     <div style={apStyles.wrap}>
       <audio ref={audioRef} onTimeUpdate={onTimeUpdate} onEnded={onEnded} />
@@ -108,7 +103,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
       <div style={apStyles.info}>
         <div style={apStyles.title}>{beat.title}</div>
         <div style={apStyles.metaRow}>
-          <span style={{ ...apStyles.genre, background: genreColor[beat.genre] || '#a3161f' }}>{beat.genre}</span>
+          <span style={{ ...apStyles.genre, background: (window.GENRE_COLORS || {})[beat.genre] || '#a3161f' }}>{beat.genre}</span>
           <span style={apStyles.dim}>{beat.bpm} BPM · {beat.key} · {beat.duration}</span>
           <span style={apStyles.plays}>▶ {plays}</span>
         </div>

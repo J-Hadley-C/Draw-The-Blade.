@@ -53,8 +53,6 @@ const LicenceModal = ({ beat, onClose }) => {
     },
   ];
 
-  const GC = { Trap:'#a3161f', Drill:'#7c1d6f', SexyDrill:'#c0185e', BB:'#1a5c3a', 'R&B':'#1a3a6b', Afrobeat:'#7a4a00', Kompa:'#0a4a6b' };
-
   return (
     <div style={lm.overlay} onClick={onClose}>
       <div style={lm.modal} onClick={e => e.stopPropagation()}>
@@ -67,7 +65,7 @@ const LicenceModal = ({ beat, onClose }) => {
               <div style={lm.eye}>◈ achat de licence</div>
               <div style={lm.beatTitle}>{beat.title}</div>
               <div style={lm.beatMeta}>
-                <span style={{ ...lm.genrePill, background: GC[beat.genre] || '#a3161f' }}>{beat.genre}</span>
+                <span style={{ ...lm.genrePill, background: (window.GENRE_COLORS || {})[beat.genre] || '#a3161f' }}>{beat.genre}</span>
                 <span style={lm.metaDim}>{beat.bpm} BPM · {beat.key}</span>
               </div>
             </div>

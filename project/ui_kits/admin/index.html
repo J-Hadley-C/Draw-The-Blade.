@@ -346,7 +346,6 @@
     const API = `${API_BASE}/api/beats`;
     const UPLOADS = `${API_BASE}/uploads/beats`;
     const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
-    const GC = { Trap: '#a3161f', Drill: '#7c1d6f', SexyDrill: '#c0185e', BB: '#1a5c3a', 'R&B': '#1a3a6b', Afrobeat: '#7a4a00', Kompa: '#0a4a6b' };
 
     const STORAGE_KEY = 'kf_admin_token';
 
@@ -559,7 +558,7 @@
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>{beat.bpm} BPM · {beat.keySignature} · {beat.duration}</div>
           </td>
           <td style={T.td}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999, background: GC[beat.genre] || '#a3161f', color: '#fff' }}>{beat.genre}</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999, background: (window.GENRE_COLORS || {})[beat.genre] || '#a3161f', color: '#fff' }}>{beat.genre}</span>
           </td>
           <td style={T.td}>
             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--fg-1)' }}>{beat.price}€</span>
@@ -646,7 +645,7 @@
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)' }}>{count} · {pct}%</span>
                     </div>
                     <div style={{ height: 4, background: 'var(--ink-700)', borderRadius: 99 }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: GC[g] || 'var(--crimson-500)', borderRadius: 99, transition: 'width .4s' }} />
+                      <div style={{ height: '100%', width: `${pct}%`, background: (window.GENRE_COLORS || {})[g] || 'var(--crimson-500)', borderRadius: 99, transition: 'width .4s' }} />
                     </div>
                   </div>
                 );
