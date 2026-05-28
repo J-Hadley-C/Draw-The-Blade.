@@ -35,12 +35,14 @@
     const [selected, setSelected] = React.useState(null);
     const [playing, setPlaying]   = React.useState(null);
     const [buyBeat, setBuyBeat]   = React.useState(null);
+    const [loading, setLoading]   = React.useState(true);
+    const [error, setError]       = React.useState(null);
 
     React.useEffect(() => {
-      window.loadBeats().then(loaded => {
-        setBeats(loaded);
-        setSelected(loaded[3] || loaded[0] || null);
-      }).catch(console.error);
+      setLoading(true);
+      window.loadBeats()
+        .then(loaded => { setBeats(loaded); setSelected(loaded[3] || loaded[0] || null); setLoading(false); })
+        .catch(() => { setError('Impossible de charger les beats. Vérifiez la connexion au serveur.'); setLoading(false); });
     }, []);
 
     const filtered = React.useMemo(() => {
@@ -57,6 +59,24 @@
       }
       return list;
     }, [genre, search, beats]);
+
+    if (loading) return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)', flexDirection: 'column', gap: 16 }}>
+        <div style={{ width: 32, height: 32, border: '2px solid var(--ink-700)', borderTopColor: 'var(--crimson-500)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Chargement…</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+
+    if (error) return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)', flexDirection: 'column', gap: 16 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--crimson-500)', letterSpacing: '.08em' }}>⚔ Erreur</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-3)', textAlign: 'center', maxWidth: 360 }}>{error}</span>
+        <button onClick={() => window.location.reload()} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.18em', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 4, background: 'transparent', color: 'var(--fg-2)', border: '1px solid var(--border)', cursor: 'pointer' }}>
+          Réessayer
+        </button>
+      </div>
+    );
 
     return (
       <>
