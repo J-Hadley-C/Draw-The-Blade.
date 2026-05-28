@@ -1,732 +1,1000 @@
+c'est
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Khen Fu · Admin</title>
-<link rel="stylesheet" href="../../colors_and_type.css">
-<style>
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--ink-950); color: var(--fg-1); height: 100%; }
-  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-  #root { min-height: 100vh; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Khen Fu · Admin</title>
+  <link rel="stylesheet" href="../../colors_and_type.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
-  input, select, textarea {
-    background: var(--ink-800); border: 1px solid var(--border);
-    border-radius: 6px; color: var(--fg-1);
-    font-family: var(--font-mono); font-size: 12px;
-    padding: 9px 12px; width: 100%; outline: none;
-    transition: border-color .15s;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--crimson-500); }
-  select option { background: var(--ink-900); }
-  textarea { resize: vertical; min-height: 72px; }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--ink-950);
+      color: var(--fg-1);
+      height: 100%;
+    }
 
-  /* Toggle */
-  .tog { display:flex; align-items:center; gap:10px; cursor:pointer; -webkit-user-select:none; user-select:none; }
-  .tog-box { position:relative; width:38px; height:20px; flex-shrink:0; }
-  .tog-box input { opacity:0; width:0; height:0; position:absolute; }
-  .tog-track { position:absolute; inset:0; background:var(--ink-700); border-radius:99px; border:1px solid var(--border); transition:background .2s; }
-  .tog-box input:checked + .tog-track { background:var(--crimson-600); border-color:var(--crimson-700); }
-  .tog-thumb { position:absolute; top:2px; left:2px; width:14px; height:14px; background:var(--fg-3); border-radius:50%; transition:transform .2s, background .2s; pointer-events:none; }
-  .tog-box input:checked ~ .tog-thumb { transform:translateX(18px); background:#fff; }
+    body {
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
 
-  /* DropZone */
-  .dz { border:1px dashed var(--border-strong); border-radius:8px; padding:18px 12px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s; background:var(--ink-900); }
-  .dz:hover, .dz.over { border-color:var(--crimson-500); background:rgba(163,22,31,.06); }
-  .dz input { display:none; }
+    #root {
+      min-height: 100vh;
+    }
 
-  /* Drawer */
-  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:100; animation:fi .15s; }
-  .drawer { position:fixed; top:0; right:0; bottom:0; width:500px; max-width:100vw; background:var(--ink-900); border-left:1px solid var(--border); z-index:101; overflow-y:auto; padding:28px 28px 100px; animation:si .2s; box-shadow:-8px 0 40px rgba(0,0,0,.7); }
-  @keyframes fi { from{opacity:0} to{opacity:1} }
-  @keyframes si { from{transform:translateX(100%)} to{transform:translateX(0)} }
+    input,
+    select,
+    textarea {
+      background: var(--ink-800);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--fg-1);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      padding: 9px 12px;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+    }
 
-  /* Toast */
-  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink-800); border:1px solid var(--border-hot); color:var(--fg-1); font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; padding:12px 22px; border-radius:6px; z-index:300; box-shadow:var(--glow-crimson-sm); animation:toast-in .2s; white-space:nowrap; }
-  .toast.err { border-color:var(--crimson-500); color:var(--crimson-400); }
-  @keyframes toast-in { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--crimson-500);
+    }
 
-  /* Drag */
-  tr.drag-over td { border-top:2px solid var(--crimson-500) !important; }
-  tr.dragging { opacity:.4; }
+    select option {
+      background: var(--ink-900);
+    }
 
-  /* Layout */
-  .admin-layout { display:flex; min-height:100vh; }
-  .admin-sidebar { width:220px; flex-shrink:0; background:var(--ink-950); border-right:1px solid var(--border); display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
-  .admin-main { flex:1; min-width:0; background:var(--ink-900); }
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
 
-  /* Sidebar nav item */
-  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 20px; font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--fg-3); cursor:pointer; transition:all .14s; border-left:2px solid transparent; -webkit-user-select:none; user-select:none; }
-  .nav-item:hover { color:var(--fg-1); background:rgba(255,255,255,.03); }
-  .nav-item.on { color:var(--ember-400); border-left-color:var(--crimson-500); background:rgba(163,22,31,.08); }
-  .nav-item .icon { width:16px; text-align:center; flex-shrink:0; }
+    /* Toggle */
+    .tog {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
 
-  /* Stat cards */
-  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
-  .stat-card { background:var(--ink-850); border:1px solid var(--border); border-radius:10px; padding:18px 20px; }
+    .tog-box {
+      position: relative;
+      width: 38px;
+      height: 20px;
+      flex-shrink: 0;
+    }
 
-  /* Licence cards */
-  .lic-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  .lic-card { background:var(--ink-850); border:1px solid var(--border); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:12px; }
-  .lic-card.featured { border-color:var(--crimson-600); box-shadow:var(--glow-crimson-sm); }
-</style>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+    .tog-box input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .tog-track {
+      position: absolute;
+      inset: 0;
+      background: var(--ink-700);
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      transition: background .2s;
+    }
+
+    .tog-box input:checked+.tog-track {
+      background: var(--crimson-600);
+      border-color: var(--crimson-700);
+    }
+
+    .tog-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: var(--fg-3);
+      border-radius: 50%;
+      transition: transform .2s, background .2s;
+      pointer-events: none;
+    }
+
+    .tog-box input:checked~.tog-thumb {
+      transform: translateX(18px);
+      background: #fff;
+    }
+
+    /* DropZone */
+    .dz {
+      border: 1px dashed var(--border-strong);
+      border-radius: 8px;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      background: var(--ink-900);
+    }
+
+    .dz:hover,
+    .dz.over {
+      border-color: var(--crimson-500);
+      background: rgba(163, 22, 31, .06);
+    }
+
+    .dz input {
+      display: none;
+    }
+
+    /* Drawer */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      animation: fi .15s;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 500px;
+      max-width: 100vw;
+      background: var(--ink-900);
+      border-left: 1px solid var(--border);
+      z-index: 101;
+      overflow-y: auto;
+      padding: 28px 28px 100px;
+      animation: si .2s;
+      box-shadow: -8px 0 40px rgba(0, 0, 0, .7);
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
+    @keyframes si {
+      from {
+        transform: translateX(100%)
+      }
+
+      to {
+        transform: translateX(0)
+      }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ink-800);
+      border: 1px solid var(--border-hot);
+      color: var(--fg-1);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 12px 22px;
+      border-radius: 6px;
+      z-index: 300;
+      box-shadow: var(--glow-crimson-sm);
+      animation: toast-in .2s;
+      white-space: nowrap;
+    }
+
+    .toast.err {
+      border-color: var(--crimson-500);
+      color: var(--crimson-400);
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0)
+      }
+    }
+
+    /* Drag */
+    tr.drag-over td {
+      border-top: 2px solid var(--crimson-500) !important;
+    }
+
+    tr.dragging {
+      opacity: .4;
+    }
+
+    /* Layout */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .admin-sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--ink-950);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .admin-main {
+      flex: 1;
+      min-width: 0;
+      background: var(--ink-900);
+    }
+
+    /* Sidebar nav item */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--fg-3);
+      cursor: pointer;
+      transition: all .14s;
+      border-left: 2px solid transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .nav-item:hover {
+      color: var(--fg-1);
+      background: rgba(255, 255, 255, .03);
+    }
+
+    .nav-item.on {
+      color: var(--ember-400);
+      border-left-color: var(--crimson-500);
+      background: rgba(163, 22, 31, .08);
+    }
+
+    .nav-item .icon {
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .stat-card {
+      background: var(--ink-850);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    /* Licence cards */
+    .lic-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .lic-card {
+      background: var(--ink-850);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .lic-card.featured {
+      border-color: var(--crimson-600);
+      box-shadow: var(--glow-crimson-sm);
+    }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+    crossorigin="anonymous"></script>
+  <script src="../config.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+    integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+    crossorigin="anonymous"></script>
 </head>
-<body><div id="root"></div>
-<script type="text/babel">
-const API     = 'http://127.0.0.1:8000/api/beats';
-const UPLOADS = 'http://127.0.0.1:8000/uploads/beats';
-const GENRES  = ['Trap','Drill','SexyDrill','BB','R&B','Afrobeat','Kompa'];
-const GC = { Trap:'#a3161f', Drill:'#7c1d6f', SexyDrill:'#c0185e', BB:'#1a5c3a', 'R&B':'#1a3a6b', Afrobeat:'#7a4a00', Kompa:'#0a4a6b' };
 
-function imgSrc(beat) {
-  if (!beat.imagePath) return null;
-  if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
-  return `${UPLOADS}/${beat.imagePath}`;
-}
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const API_BASE = window.APP_CONFIG.API_BASE;
+    const API = `${API_BASE}/api/beats`;
+    const UPLOADS = `${API_BASE}/uploads/beats`;
+    const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
+    const GC = { Trap: '#a3161f', Drill: '#7c1d6f', SexyDrill: '#c0185e', BB: '#1a5c3a', 'R&B': '#1a3a6b', Afrobeat: '#7a4a00', Kompa: '#0a4a6b' };
 
-// ── Toggle ──────────────────────────────────────────────────────────────────
-const Toggle = ({ checked, onChange, label }) => (
-  <label className="tog">
-    <span className="tog-box">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
-      <span className="tog-track" /><span className="tog-thumb" />
-    </span>
-    {label && <span style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--fg-2)'}}>{label}</span>}
-  </label>
-);
+    function imgSrc(beat) {
+      if (!beat.imagePath) return null;
+      if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
+      return `${UPLOADS}/${beat.imagePath}`;
+    }
 
-// ── DropZone ─────────────────────────────────────────────────────────────────
-const DropZone = ({ label, accept, file, onFile, preview }) => {
-  const [drag, setDrag] = React.useState(false);
-  const ref = React.useRef();
-  return (
-    <div className={'dz'+(drag?' over':'')}
-      onClick={() => ref.current.click()}
-      onDragOver={e=>{e.preventDefault();setDrag(true)}}
-      onDragLeave={()=>setDrag(false)}
-      onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(f)onFile(f);}}>
-      <input ref={ref} type="file" accept={accept} onChange={e=>{if(e.target.files[0])onFile(e.target.files[0]);e.target.value='';}} />
-      {preview && <img src={preview} style={{maxHeight:80,borderRadius:6,objectFit:'cover',marginBottom:6,display:'block',marginInline:'auto'}} alt="" />}
-      {file && !preview && <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',marginBottom:4}}>✓ {file.name}</div>}
-      <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'var(--fg-3)'}}>
-        {(file||preview)?'Changer':label}
-      </div>
-    </div>
-  );
-};
+    // ── Toggle ──────────────────────────────────────────────────────────────────
+    const Toggle = ({ checked, onChange, label }) => (
+      <label className="tog">
+        <span className="tog-box">
+          <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+          <span className="tog-track" /><span className="tog-thumb" />
+        </span>
+        {label && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>{label}</span>}
+      </label>
+    );
 
-// ── Toast ────────────────────────────────────────────────────────────────────
-const Toast = ({ msg, err, onDone }) => {
-  React.useEffect(()=>{const t=setTimeout(onDone,2800);return()=>clearTimeout(t);},[]);
-  return <div className={'toast'+(err?' err':'')}>{msg}</div>;
-};
-
-// ── BeatForm ─────────────────────────────────────────────────────────────────
-const EMPTY = { title:'', genre:'Trap', bpm:'', key:'', duration:'', description:'', price:'', isFree:false, inCarousel:false };
-
-const BeatForm = ({ beat, onClose, onSaved }) => {
-  const isEdit = !!beat;
-  const [form, setForm] = React.useState(isEdit ? {
-    title:beat.title, genre:beat.genre, bpm:String(beat.bpm),
-    key:beat.keySignature, duration:beat.duration, description:beat.description,
-    price:String(beat.price), isFree:beat.isFree, inCarousel:beat.inCarousel,
-  } : {...EMPTY});
-  const [coverFile, setCoverFile] = React.useState(null);
-  const [audioFile, setAudioFile] = React.useState(null);
-  const [saving, setSaving]       = React.useState(false);
-  const [prevImg, setPrevImg]     = React.useState(isEdit ? imgSrc(beat) : null);
-  const set = (k,v) => setForm(f=>({...f,[k]:v}));
-  const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
-
-  const submit = async e => {
-    e.preventDefault(); setSaving(true);
-    try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k,v]) => fd.append(k, v));
-      if (coverFile) fd.append('coverImage', coverFile);
-      if (audioFile) fd.append('audioFile', audioFile);
-      const url = isEdit ? `${API}/${beat.id}` : API;
-      const res = await fetch(url, { method:'POST', body:fd });
-      if (!res.ok) throw new Error(await res.text());
-      onSaved(await res.json(), isEdit);
-    } catch(err) { alert('Erreur : '+err.message); }
-    finally { setSaving(false); }
-  };
-
-  const F = ({lbl,k,type='text',ph=''}) => (
-    <div style={{display:'flex',flexDirection:'column',gap:5,flex:1}}>
-      <label style={S.lbl}>{lbl}</label>
-      <input type={type} value={form[k]} placeholder={ph} onChange={e=>set(k,e.target.value)}
-        required={['title','bpm','key','duration','price'].includes(k)} />
-    </div>
-  );
-
-  return (
-    <>
-      <div className="overlay" onClick={onClose} />
-      <div className="drawer">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-          <div>
-            <div style={S.eye}>{isEdit?'✏ modifier':'+ nouveau beat'}</div>
-            <h2 style={S.h2}>{isEdit?beat.title:'Ajouter un beat'}</h2>
+    // ── DropZone ─────────────────────────────────────────────────────────────────
+    const DropZone = ({ label, accept, file, onFile, preview }) => {
+      const [drag, setDrag] = React.useState(false);
+      const ref = React.useRef();
+      return (
+        <div className={'dz' + (drag ? ' over' : '')}
+          onClick={() => ref.current.click()}
+          onDragOver={e => { e.preventDefault(); setDrag(true) }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={e => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f) onFile(f); }}>
+          <input ref={ref} type="file" accept={accept} onChange={e => { if (e.target.files[0]) onFile(e.target.files[0]); e.target.value = ''; }} />
+          {preview && <img src={preview} style={{ maxHeight: 80, borderRadius: 6, objectFit: 'cover', marginBottom: 6, display: 'block', marginInline: 'auto' }} alt="" />}
+          {file && !preview && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)', marginBottom: 4 }}>✓ {file.name}</div>}
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
+            {(file || preview) ? 'Changer' : label}
           </div>
-          <button onClick={onClose} style={S.xbtn}>✕</button>
         </div>
-        <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:14}}>
-          <F lbl="Titre" k="title" ph="Ex: Night Runner" />
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-            <div style={{display:'flex',flexDirection:'column',gap:5}}>
-              <label style={S.lbl}>Genre</label>
-              <select value={form.genre} onChange={e=>set('genre',e.target.value)}>
-                {GENRES.map(g=><option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
-            <F lbl="BPM" k="bpm" type="number" ph="140" />
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-            <F lbl="Tonalité" k="key" ph="Am" />
-            <F lbl="Durée" k="duration" ph="3:24" />
-          </div>
-          <div style={{display:'flex',flexDirection:'column',gap:5}}>
-            <label style={S.lbl}>Description</label>
-            <textarea value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Dark trap instrumental..." />
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,alignItems:'end'}}>
-            <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
-            <Toggle checked={form.isFree} onChange={v=>set('isFree',v)} label="Gratuit" />
-          </div>
-          <Toggle checked={form.inCarousel} onChange={v=>set('inCarousel',v)} label="Afficher dans le carousel" />
-          <div style={S.rule} />
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-            <div style={{display:'flex',flexDirection:'column',gap:5}}>
-              <label style={S.lbl}>Cover</label>
-              <DropZone label="Image (glisser ou cliquer)" accept="image/*" file={coverFile} onFile={onCover} preview={prevImg} />
-            </div>
-            <div style={{display:'flex',flexDirection:'column',gap:5}}>
-              <label style={S.lbl}>Audio (MP3)</label>
-              <DropZone label="MP3 (glisser ou cliquer)" accept="audio/*" file={audioFile} onFile={setAudioFile} preview={null} />
-              {isEdit && beat.audioPath && !audioFile && (
-                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',marginTop:2}}>♪ fichier existant</div>
-              )}
-            </div>
-          </div>
-          <div style={S.rule} />
-          <div style={{display:'flex',gap:10}}>
-            <button type="submit" disabled={saving} style={S.btnP}>{saving?'...':isEdit?'✓ Enregistrer':'+ Créer'}</button>
-            <button type="button" onClick={onClose} style={S.btnG}>Annuler</button>
-          </div>
-        </form>
-      </div>
-    </>
-  );
-};
+      );
+    };
 
-// ── BeatRow ──────────────────────────────────────────────────────────────────
-const BeatRow = ({ beat, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragging }) => {
-  const [conf, setConf] = React.useState(false);
-  const src = imgSrc(beat);
-  return (
-    <tr draggable onDragStart={()=>onDragStart(beat)} onDragOver={e=>{e.preventDefault();onDragOver(beat);}} onDrop={()=>onDrop(beat)}
-      className={dragging?'dragging':''} style={{borderBottom:'1px solid var(--border)',cursor:'grab',transition:'background .1s'}}
-      onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,.025)'}
-      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-      <td style={{...T.td,color:'var(--fg-3)',fontSize:14,cursor:'grab',paddingRight:0}}>⠿</td>
-      <td style={T.td}>
-        {src ? <img src={src} style={{width:42,height:42,borderRadius:6,objectFit:'cover',border:'2px double #000',display:'block'}} alt="" />
-             : <div style={{width:42,height:42,borderRadius:6,background:'var(--ink-800)',border:'1px solid var(--border)',display:'grid',placeItems:'center',fontSize:18,color:'var(--fg-3)'}}>♪</div>}
-      </td>
-      <td style={T.td}>
-        <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)'}}>{beat.title}</div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2}}>{beat.bpm} BPM · {beat.keySignature} · {beat.duration}</div>
-      </td>
-      <td style={T.td}>
-        <span style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.16em',textTransform:'uppercase',padding:'3px 8px',borderRadius:999,background:GC[beat.genre]||'#a3161f',color:'#fff'}}>{beat.genre}</span>
-      </td>
-      <td style={T.td}>
-        <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,color:'var(--fg-1)'}}>{beat.price}€</span>
-        {beat.isFree && <span style={{fontFamily:'var(--font-mono)',fontSize:9,color:'var(--ember-400)',marginLeft:5,textTransform:'uppercase',letterSpacing:'.1em'}}>gratuit</span>}
-      </td>
-      <td style={{...T.td,textAlign:'center'}}><Toggle checked={beat.inCarousel} onChange={v=>onToggleCarousel(beat,v)} /></td>
-      <td style={{...T.td,textAlign:'center'}}>
-        {beat.audioPath ? <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)'}}>♪ ok</span>
-                        : <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>—</span>}
-      </td>
-      <td style={{...T.td,textAlign:'right'}}>
-        <div style={{display:'flex',gap:6,justifyContent:'flex-end'}}>
-          <button onClick={()=>onEdit(beat)} style={T.btnE} title="Modifier">✏</button>
-          {conf ? <>
-            <button onClick={()=>onDelete(beat)} style={T.btnD}>Confirmer</button>
-            <button onClick={()=>setConf(false)} style={T.btnG}>✕</button>
-          </> : <button onClick={()=>setConf(true)} style={T.btnD} title="Supprimer">🗑</button>}
+    // ── Toast ────────────────────────────────────────────────────────────────────
+    const Toast = ({ msg, err, onDone }) => {
+      React.useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, []);
+      return <div className={'toast' + (err ? ' err' : '')}>{msg}</div>;
+    };
+
+    // ── BeatForm ─────────────────────────────────────────────────────────────────
+    const EMPTY = { title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
+
+    const BeatForm = ({ beat, onClose, onSaved }) => {
+      const isEdit = !!beat;
+      const [form, setForm] = React.useState(isEdit ? {
+        title: beat.title, genre: beat.genre, bpm: String(beat.bpm),
+        key: beat.keySignature, duration: beat.duration, description: beat.description,
+        price: String(beat.price), isFree: beat.isFree, inCarousel: beat.inCarousel,
+      } : { ...EMPTY });
+      const [coverFile, setCoverFile] = React.useState(null);
+      const [audioFile, setAudioFile] = React.useState(null);
+      const [saving, setSaving] = React.useState(false);
+      const [prevImg, setPrevImg] = React.useState(isEdit ? imgSrc(beat) : null);
+      const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
+
+      const submit = async e => {
+        e.preventDefault(); setSaving(true);
+        try {
+          const fd = new FormData();
+          Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+          if (coverFile) fd.append('coverImage', coverFile);
+          if (audioFile) fd.append('audioFile', audioFile);
+          const url = isEdit ? `${API}/${beat.id}` : API;
+          const res = await fetch(url, { method: 'POST', body: fd });
+          if (!res.ok) throw new Error(await res.text());
+          onSaved(await res.json(), isEdit);
+        } catch (err) { alert('Erreur : ' + err.message); }
+        finally { setSaving(false); }
+      };
+
+      const F = ({ lbl, k, type = 'text', ph = '' }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
+          <label style={S.lbl}>{lbl}</label>
+          <input type={type} value={form[k]} placeholder={ph} onChange={e => set(k, e.target.value)}
+            required={['title', 'bpm', 'key', 'duration', 'price'].includes(k)} />
         </div>
-      </td>
-    </tr>
-  );
-};
+      );
 
-// ── Section : Vue d'ensemble ─────────────────────────────────────────────────
-const OverviewSection = ({ beats, onGoTo }) => {
-  const withAudio   = beats.filter(b => b.audioPath).length;
-  const carousel    = beats.filter(b => b.inCarousel).length;
-  const free        = beats.filter(b => b.isFree).length;
-  const genres      = [...new Set(beats.map(b => b.genre))];
-  const recent      = [...beats].slice(0, 5);
-
-  const StatCard = ({ label, value, sub, color }) => (
-    <div className="stat-card">
-      <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--fg-3)',marginBottom:8}}>{label}</div>
-      <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:36,color:color||'var(--fg-1)',letterSpacing:'.04em',lineHeight:1}}>{value}</div>
-      {sub && <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:6,letterSpacing:'.1em'}}>{sub}</div>}
-    </div>
-  );
-
-  return (
-    <div style={{padding:'32px'}}>
-      <div style={{marginBottom:28}}>
-        <div style={S.eye}>◈ tableau de bord</div>
-        <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>Vue d'ensemble</h1>
-      </div>
-
-      <div className="stat-grid" style={{marginBottom:32}}>
-        <StatCard label="Beats total" value={beats.length} sub={`${genres.length} genres`} />
-        <StatCard label="Avec audio" value={withAudio} sub={`${beats.length - withAudio} sans fichier`} color="var(--ember-400)" />
-        <StatCard label="En carousel" value={carousel} sub="rotation showcase" color="var(--crimson-400)" />
-        <StatCard label="Gratuits" value={free} sub="version taguée" color="#4a9a6b" />
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
-        {/* Derniers beats */}
-        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:10,padding:'20px'}}>
-          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:14}}>♪ derniers beats ajoutés</div>
-          {recent.length === 0 && <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Aucun beat</div>}
-          {recent.map(b => (
-            <div key={b.id} style={{display:'flex',alignItems:'center',gap:12,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
-              {imgSrc(b)
-                ? <img src={imgSrc(b)} style={{width:36,height:36,borderRadius:6,objectFit:'cover',flexShrink:0}} alt="" />
-                : <div style={{width:36,height:36,borderRadius:6,background:'var(--ink-800)',display:'grid',placeItems:'center',flexShrink:0,color:'var(--fg-3)'}}>♪</div>}
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{b.title}</div>
-                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2}}>{b.genre} · {b.bpm} BPM</div>
+      return (
+        <>
+          <div className="overlay" onClick={onClose} />
+          <div className="drawer">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <div>
+                <div style={S.eye}>{isEdit ? '✏ modifier' : '+ nouveau beat'}</div>
+                <h2 style={S.h2}>{isEdit ? beat.title : 'Ajouter un beat'}</h2>
               </div>
-              <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,color:'var(--fg-2)',flexShrink:0}}>{b.price}€</span>
+              <button onClick={onClose} style={S.xbtn}>✕</button>
             </div>
-          ))}
-        </div>
-
-        {/* Répartition par genre */}
-        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:10,padding:'20px'}}>
-          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:14}}>◈ répartition par genre</div>
-          {GENRES.map(g => {
-            const count = beats.filter(b => b.genre === g).length;
-            const pct   = beats.length ? Math.round((count/beats.length)*100) : 0;
-            if (!count) return null;
-            return (
-              <div key={g} style={{marginBottom:10}}>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-                  <span style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--fg-2)'}}>{g}</span>
-                  <span style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)'}}>{count} · {pct}%</span>
+            <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <F lbl="Titre" k="title" ph="Ex: Night Runner" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={S.lbl}>Genre</label>
+                  <select value={form.genre} onChange={e => set('genre', e.target.value)}>
+                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
                 </div>
-                <div style={{height:4,background:'var(--ink-700)',borderRadius:99}}>
-                  <div style={{height:'100%',width:`${pct}%`,background:GC[g]||'var(--crimson-500)',borderRadius:99,transition:'width .4s'}} />
+                <F lbl="BPM" k="bpm" type="number" ph="140" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <F lbl="Tonalité" k="key" ph="Am" />
+                <F lbl="Durée" k="duration" ph="3:24" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={S.lbl}>Description</label>
+                <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Dark trap instrumental..." />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'end' }}>
+                <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
+                <Toggle checked={form.isFree} onChange={v => set('isFree', v)} label="Gratuit" />
+              </div>
+              <Toggle checked={form.inCarousel} onChange={v => set('inCarousel', v)} label="Afficher dans le carousel" />
+              <div style={S.rule} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={S.lbl}>Cover</label>
+                  <DropZone label="Image (glisser ou cliquer)" accept="image/*" file={coverFile} onFile={onCover} preview={prevImg} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                  <label style={S.lbl}>Audio (MP3)</label>
+                  <DropZone label="MP3 (glisser ou cliquer)" accept="audio/*" file={audioFile} onFile={setAudioFile} preview={null} />
+                  {isEdit && beat.audioPath && !audioFile && (
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)', marginTop: 2 }}>♪ fichier existant</div>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Liens rapides */}
-      <div style={{display:'flex',gap:12,marginTop:24}}>
-        <button onClick={()=>onGoTo('catalogue')} style={S.btnP}>+ Nouveau beat</button>
-        <a href="../../showcase/index.html" target="_blank" style={{...S.btnG,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>↗ Voir le Showcase</a>
-        <a href="../../codex/index.html" target="_blank" style={{...S.btnG,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>↗ Voir le Catalogue</a>
-      </div>
-    </div>
-  );
-};
-
-// ── Section : Catalogue ──────────────────────────────────────────────────────
-const CatalogueSection = ({ beats, loading, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragOver, onNew }) => {
-  const carouselCount = beats.filter(b=>b.inCarousel).length;
-  return (
-    <div style={{padding:'32px'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
-        <div>
-          <div style={S.eye}>♪ gestion des beats</div>
-          <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>Catalogue</h1>
-          <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase',marginTop:6}}>
-            {beats.length} beats · {carouselCount} en carousel
+              <div style={S.rule} />
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="submit" disabled={saving} style={S.btnP}>{saving ? '...' : isEdit ? '✓ Enregistrer' : '+ Créer'}</button>
+                <button type="button" onClick={onClose} style={S.btnG}>Annuler</button>
+              </div>
+            </form>
           </div>
-        </div>
-        <button onClick={onNew} style={S.btnP}>+ Nouveau beat</button>
-      </div>
+        </>
+      );
+    };
 
-      {beats.length > 0 && (
-        <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',color:'var(--fg-3)',textTransform:'uppercase',marginBottom:12}}>
-          ⠿ Glisser les lignes pour réorganiser
-        </div>
-      )}
+    // ── BeatRow ──────────────────────────────────────────────────────────────────
+    const BeatRow = ({ beat, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragging }) => {
+      const [conf, setConf] = React.useState(false);
+      const src = imgSrc(beat);
+      return (
+        <tr draggable onDragStart={() => onDragStart(beat)} onDragOver={e => { e.preventDefault(); onDragOver(beat); }} onDrop={() => onDrop(beat)}
+          className={dragging ? 'dragging' : ''} style={{ borderBottom: '1px solid var(--border)', cursor: 'grab', transition: 'background .1s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,.025)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+          <td style={{ ...T.td, color: 'var(--fg-3)', fontSize: 14, cursor: 'grab', paddingRight: 0 }}>⠿</td>
+          <td style={T.td}>
+            {src ? <img src={src} style={{ width: 42, height: 42, borderRadius: 6, objectFit: 'cover', border: '2px double #000', display: 'block' }} alt="" />
+              : <div style={{ width: 42, height: 42, borderRadius: 6, background: 'var(--ink-800)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontSize: 18, color: 'var(--fg-3)' }}>♪</div>}
+          </td>
+          <td style={T.td}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{beat.title}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>{beat.bpm} BPM · {beat.keySignature} · {beat.duration}</div>
+          </td>
+          <td style={T.td}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.16em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999, background: GC[beat.genre] || '#a3161f', color: '#fff' }}>{beat.genre}</span>
+          </td>
+          <td style={T.td}>
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, color: 'var(--fg-1)' }}>{beat.price}€</span>
+            {beat.isFree && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ember-400)', marginLeft: 5, textTransform: 'uppercase', letterSpacing: '.1em' }}>gratuit</span>}
+          </td>
+          <td style={{ ...T.td, textAlign: 'center' }}><Toggle checked={beat.inCarousel} onChange={v => onToggleCarousel(beat, v)} /></td>
+          <td style={{ ...T.td, textAlign: 'center' }}>
+            {beat.audioPath ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)' }}>♪ ok</span>
+              : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)' }}>—</span>}
+          </td>
+          <td style={{ ...T.td, textAlign: 'right' }}>
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+              <button onClick={() => onEdit(beat)} style={T.btnE} title="Modifier">✏</button>
+              {conf ? <>
+                <button onClick={() => onDelete(beat)} style={T.btnD}>Confirmer</button>
+                <button onClick={() => setConf(false)} style={T.btnG}>✕</button>
+              </> : <button onClick={() => setConf(true)} style={T.btnD} title="Supprimer">🗑</button>}
+            </div>
+          </td>
+        </tr>
+      );
+    };
 
-      {loading ? (
-        <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'80px 0'}}>Chargement…</div>
-      ) : (
-        <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
-          <table style={{width:'100%',borderCollapse:'collapse'}}>
-            <thead>
-              <tr style={{borderBottom:'1px solid var(--border)',background:'var(--ink-800)'}}>
-                {['','Cover','Titre','Genre','Prix','Carousel','Audio','Actions'].map((h,i)=>(
-                  <th key={i} style={{padding:'10px 12px',fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)',fontWeight:400,textAlign:h==='Actions'?'right':['Carousel','Audio'].includes(h)?'center':'left'}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {beats.map(b=>(
-                <BeatRow key={b.id} beat={b} onEdit={onEdit} onDelete={onDelete} onToggleCarousel={onToggleCarousel}
-                  onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} dragging={dragOver===b.id} />
+    // ── Section : Vue d'ensemble ─────────────────────────────────────────────────
+    const OverviewSection = ({ beats, onGoTo }) => {
+      const withAudio = beats.filter(b => b.audioPath).length;
+      const carousel = beats.filter(b => b.inCarousel).length;
+      const free = beats.filter(b => b.isFree).length;
+      const genres = [...new Set(beats.map(b => b.genre))];
+      const recent = [...beats].slice(0, 5);
+
+      const StatCard = ({ label, value, sub, color }) => (
+        <div className="stat-card">
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: 8 }}>{label}</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 36, color: color || 'var(--fg-1)', letterSpacing: '.04em', lineHeight: 1 }}>{value}</div>
+          {sub && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 6, letterSpacing: '.1em' }}>{sub}</div>}
+        </div>
+      );
+
+      return (
+        <div style={{ padding: '32px' }}>
+          <div style={{ marginBottom: 28 }}>
+            <div style={S.eye}>◈ tableau de bord</div>
+            <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 0' }}>Vue d'ensemble</h1>
+          </div>
+
+          <div className="stat-grid" style={{ marginBottom: 32 }}>
+            <StatCard label="Beats total" value={beats.length} sub={`${genres.length} genres`} />
+            <StatCard label="Avec audio" value={withAudio} sub={`${beats.length - withAudio} sans fichier`} color="var(--ember-400)" />
+            <StatCard label="En carousel" value={carousel} sub="rotation showcase" color="var(--crimson-400)" />
+            <StatCard label="Gratuits" value={free} sub="version taguée" color="#4a9a6b" />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {/* Derniers beats */}
+            <div style={{ background: 'var(--ink-850)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 14 }}>♪ derniers beats ajoutés</div>
+              {recent.length === 0 && <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)' }}>Aucun beat</div>}
+              {recent.map(b => (
+                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  {imgSrc(b)
+                    ? <img src={imgSrc(b)} style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }} alt="" />
+                    : <div style={{ width: 36, height: 36, borderRadius: 6, background: 'var(--ink-800)', display: 'grid', placeItems: 'center', flexShrink: 0, color: 'var(--fg-3)' }}>♪</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.title}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 2 }}>{b.genre} · {b.bpm} BPM</div>
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 12, color: 'var(--fg-2)', flexShrink: 0 }}>{b.price}€</span>
+                </div>
               ))}
-            </tbody>
-          </table>
-          {beats.length===0 && (
-            <div style={{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>
-              Aucun beat · cliquer sur "+ Nouveau beat"
+            </div>
+
+            {/* Répartition par genre */}
+            <div style={{ background: 'var(--ink-850)', border: '1px solid var(--border)', borderRadius: 10, padding: '20px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 14 }}>◈ répartition par genre</div>
+              {GENRES.map(g => {
+                const count = beats.filter(b => b.genre === g).length;
+                const pct = beats.length ? Math.round((count / beats.length) * 100) : 0;
+                if (!count) return null;
+                return (
+                  <div key={g} style={{ marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>{g}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)' }}>{count} · {pct}%</span>
+                    </div>
+                    <div style={{ height: 4, background: 'var(--ink-700)', borderRadius: 99 }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: GC[g] || 'var(--crimson-500)', borderRadius: 99, transition: 'width .4s' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Liens rapides */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+            <button onClick={() => onGoTo('catalogue')} style={S.btnP}>+ Nouveau beat</button>
+            <a href="../../showcase/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Showcase</a>
+            <a href="../../codex/index.html" target="_blank" style={{ ...S.btnG, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>↗ Voir le Catalogue</a>
+          </div>
+        </div>
+      );
+    };
+
+    // ── Section : Catalogue ──────────────────────────────────────────────────────
+    const CatalogueSection = ({ beats, loading, onEdit, onDelete, onToggleCarousel, onDragStart, onDragOver, onDrop, dragOver, onNew }) => {
+      const carouselCount = beats.filter(b => b.inCarousel).length;
+      return (
+        <div style={{ padding: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+            <div>
+              <div style={S.eye}>♪ gestion des beats</div>
+              <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 0' }}>Catalogue</h1>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.14em', color: 'var(--fg-3)', textTransform: 'uppercase', marginTop: 6 }}>
+                {beats.length} beats · {carouselCount} en carousel
+              </div>
+            </div>
+            <button onClick={onNew} style={S.btnP}>+ Nouveau beat</button>
+          </div>
+
+          {beats.length > 0 && (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.14em', color: 'var(--fg-3)', textTransform: 'uppercase', marginBottom: 12 }}>
+              ⠿ Glisser les lignes pour réorganiser
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-3)', textAlign: 'center', padding: '80px 0' }}>Chargement…</div>
+          ) : (
+            <div style={{ background: 'var(--ink-850)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--ink-800)' }}>
+                    {['', 'Cover', 'Titre', 'Genre', 'Prix', 'Carousel', 'Audio', 'Actions'].map((h, i) => (
+                      <th key={i} style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-3)', fontWeight: 400, textAlign: h === 'Actions' ? 'right' : ['Carousel', 'Audio'].includes(h) ? 'center' : 'left' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {beats.map(b => (
+                    <BeatRow key={b.id} beat={b} onEdit={onEdit} onDelete={onDelete} onToggleCarousel={onToggleCarousel}
+                      onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} dragging={dragOver === b.id} />
+                  ))}
+                </tbody>
+              </table>
+              {beats.length === 0 && (
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-3)', textAlign: 'center', padding: '60px 0' }}>
+                  Aucun beat · cliquer sur "+ Nouveau beat"
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
-    </div>
-  );
-};
+      );
+    };
 
-// ── Section : Messages ───────────────────────────────────────────────────────
-const MSG_API = 'http://127.0.0.1:8000/api/messages';
+    // ── Section : Messages ───────────────────────────────────────────────────────
+    const MSG_API = `${window.APP_CONFIG.API_BASE}/api/messages`;
 
-const MessagesSection = () => {
-  const [messages, setMessages] = React.useState([]);
-  const [loading, setLoading]   = React.useState(true);
-  const [selected, setSelected] = React.useState(null);
+    const MessagesSection = () => {
+      const [messages, setMessages] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+      const [selected, setSelected] = React.useState(null);
 
-  const load = async () => {
-    setLoading(true);
-    try { setMessages(await (await fetch(MSG_API)).json()); }
-    catch { /* silencieux */ }
-    finally { setLoading(false); }
-  };
+      const load = async () => {
+        setLoading(true);
+        try { setMessages(await (await fetch(MSG_API)).json()); }
+        catch { /* silencieux */ }
+        finally { setLoading(false); }
+      };
 
-  React.useEffect(() => { load(); }, []);
+      React.useEffect(() => { load(); }, []);
 
-  const markRead = async msg => {
-    if (msg.isRead) return;
-    await fetch(`${MSG_API}/${msg.id}/read`, { method:'PATCH' });
-    setMessages(ms => ms.map(m => m.id===msg.id ? {...m,isRead:true} : m));
-    if (selected?.id === msg.id) setSelected({...msg,isRead:true});
-  };
+      const markRead = async msg => {
+        if (msg.isRead) return;
+        await fetch(`${MSG_API}/${msg.id}/read`, { method: 'PATCH' });
+        setMessages(ms => ms.map(m => m.id === msg.id ? { ...m, isRead: true } : m));
+        if (selected?.id === msg.id) setSelected({ ...msg, isRead: true });
+      };
 
-  const del = async msg => {
-    await fetch(`${MSG_API}/${msg.id}`, { method:'DELETE' });
-    setMessages(ms => ms.filter(m => m.id !== msg.id));
-    if (selected?.id === msg.id) setSelected(null);
-  };
+      const del = async msg => {
+        await fetch(`${MSG_API}/${msg.id}`, { method: 'DELETE' });
+        setMessages(ms => ms.filter(m => m.id !== msg.id));
+        if (selected?.id === msg.id) setSelected(null);
+      };
 
-  const unread = messages.filter(m => !m.isRead).length;
+      const unread = messages.filter(m => !m.isRead).length;
 
-  const fmt = iso => new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const fmt = iso => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  return (
-    <div style={{padding:'32px'}}>
-      <div style={S.eye}>✉ formulaire de contact</div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:24}}>
-        <h1 style={{...S.h2,fontSize:28,margin:'4px 0 0'}}>
-          Messages
-          {unread > 0 && <span style={{marginLeft:10,fontFamily:'var(--font-mono)',fontSize:12,background:'var(--crimson-600)',color:'#fff',padding:'2px 9px',borderRadius:999,verticalAlign:'middle'}}>{unread}</span>}
-        </h1>
-        <button onClick={load} style={S.btnG}>↻ Actualiser</button>
-      </div>
+      return (
+        <div style={{ padding: '32px' }}>
+          <div style={S.eye}>✉ formulaire de contact</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 }}>
+            <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 0' }}>
+              Messages
+              {unread > 0 && <span style={{ marginLeft: 10, fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--crimson-600)', color: '#fff', padding: '2px 9px', borderRadius: 999, verticalAlign: 'middle' }}>{unread}</span>}
+            </h1>
+            <button onClick={load} style={S.btnG}>↻ Actualiser</button>
+          </div>
 
-      {loading ? (
-        <div style={{fontFamily:'var(--font-mono)',fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--fg-3)',textAlign:'center',padding:'60px 0'}}>Chargement…</div>
-      ) : messages.length === 0 ? (
-        <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
-          <div style={{fontSize:32,marginBottom:12}}>✉</div>
-          <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:16,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:6}}>Aucun message</div>
-          <div style={{fontFamily:'var(--font-sans)',fontSize:13,color:'var(--fg-3)'}}>Les messages du formulaire de contact apparaîtront ici.</div>
-        </div>
-      ) : (
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1.4fr',gap:16,alignItems:'start'}}>
-          {/* Liste */}
-          <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,overflow:'hidden'}}>
-            {messages.map(m => (
-              <div key={m.id}
-                onClick={() => { setSelected(m); markRead(m); }}
-                style={{padding:'14px 16px',borderBottom:'1px solid var(--border)',cursor:'pointer',background:selected?.id===m.id?'rgba(163,22,31,.1)':'transparent',transition:'background .1s',position:'relative'}}
-                onMouseEnter={e=>{ if(selected?.id!==m.id) e.currentTarget.style.background='rgba(255,255,255,.03)'; }}
-                onMouseLeave={e=>{ if(selected?.id!==m.id) e.currentTarget.style.background='transparent'; }}
-              >
-                {!m.isRead && <span style={{position:'absolute',top:16,right:12,width:7,height:7,borderRadius:'50%',background:'var(--crimson-500)',display:'block'}} />}
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:3}}>
-                  <span style={{fontFamily:'var(--font-display)',fontWeight:m.isRead?400:700,fontSize:13,letterSpacing:'.04em',color:m.isRead?'var(--fg-2)':'var(--fg-1)',textTransform:'uppercase'}}>{m.name}</span>
-                  <span style={{fontFamily:'var(--font-mono)',fontSize:9,color:'var(--fg-3)',letterSpacing:'.08em'}}>{fmt(m.createdAt)}</span>
+          {loading ? (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--fg-3)', textAlign: 'center', padding: '60px 0' }}>Chargement…</div>
+          ) : messages.length === 0 ? (
+            <div style={{ background: 'var(--ink-850)', border: '1px dashed var(--border-strong)', borderRadius: 12, padding: '60px 40px', textAlign: 'center', maxWidth: 560 }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>✉</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 6 }}>Aucun message</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)' }}>Les messages du formulaire de contact apparaîtront ici.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 16, alignItems: 'start' }}>
+              {/* Liste */}
+              <div style={{ background: 'var(--ink-850)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+                {messages.map(m => (
+                  <div key={m.id}
+                    onClick={() => { setSelected(m); markRead(m); }}
+                    style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', background: selected?.id === m.id ? 'rgba(163,22,31,.1)' : 'transparent', transition: 'background .1s', position: 'relative' }}
+                    onMouseEnter={e => { if (selected?.id !== m.id) e.currentTarget.style.background = 'rgba(255,255,255,.03)'; }}
+                    onMouseLeave={e => { if (selected?.id !== m.id) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    {!m.isRead && <span style={{ position: 'absolute', top: 16, right: 12, width: 7, height: 7, borderRadius: '50%', background: 'var(--crimson-500)', display: 'block' }} />}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: m.isRead ? 400 : 700, fontSize: 13, letterSpacing: '.04em', color: m.isRead ? 'var(--fg-2)' : 'var(--fg-1)', textTransform: 'uppercase' }}>{m.name}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)', letterSpacing: '.08em' }}>{fmt(m.createdAt)}</span>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 3 }}>{m.subject}</div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.body}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Détail */}
+              {selected ? (
+                <div style={{ background: 'var(--ink-850)', border: '1px solid var(--border)', borderRadius: 12, padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{selected.name}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', marginTop: 2 }}>{selected.email}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 2, letterSpacing: '.08em' }}>{fmt(selected.createdAt)}</div>
+                    </div>
+                    <button onClick={() => { if (confirm('Supprimer ce message ?')) del(selected); }} style={T.btnD}>🗑 Supprimer</button>
+                  </div>
+                  <div style={{ height: 1, background: 'var(--border)', marginBottom: 16 }} />
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 8 }}>Sujet</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 16 }}>{selected.subject}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 8 }}>Message</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--fg-2)', whiteSpace: 'pre-wrap' }}>{selected.body}</div>
+                  <div style={{ marginTop: 20 }}>
+                    <a href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
+                      style={{ ...S.btnP, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+                      ✉ Répondre par email
+                    </a>
+                  </div>
                 </div>
-                <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--ember-400)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:3}}>{m.subject}</div>
-                <div style={{fontFamily:'var(--font-sans)',fontSize:12,color:'var(--fg-3)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{m.body}</div>
+              ) : (
+                <div style={{ background: 'var(--ink-850)', border: '1px dashed var(--border)', borderRadius: 12, padding: '60px 24px', textAlign: 'center', color: 'var(--fg-3)', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase' }}>
+                  Sélectionner un message
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // ── Section : Licences ───────────────────────────────────────────────────────
+    const LicencesSection = () => {
+      const licences = [
+        {
+          id: 'basic', label: 'Licence Basique', price: '29 €',
+          tag: 'Pour les artistes émergents',
+          features: ['Utilisation non commerciale', '1 projet / mixtape', '500 copies physiques', 'Streaming illimité', 'Crédit obligatoire'],
+          featured: false,
+        },
+        {
+          id: 'premium', label: 'Licence Premium', price: '79 €',
+          tag: 'Pour les releases commerciales',
+          features: ['Utilisation commerciale', 'Projets illimités', 'Copies illimitées', 'Streaming illimité', 'Retrait du crédit possible', 'Revente en single'],
+          featured: true,
+        },
+        {
+          id: 'exclu', label: 'Exclusivité', price: 'Sur devis',
+          tag: 'Droits complets & uniques',
+          features: ['Droits exclusifs complets', 'Retrait de la vente immédiat', 'Transfert de copyright', 'Utilisation TV / Cinéma', 'Accompagnement personnalisé'],
+          featured: false,
+        },
+      ];
+
+      return (
+        <div style={{ padding: '32px' }}>
+          <div style={S.eye}>◈ types de licences</div>
+          <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 8px' }}>Licences</h1>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 28 }}>
+            Ces tarifs sont affichés sur la page d'achat publique
+          </div>
+          <div className="lic-grid">
+            {licences.map(l => (
+              <div key={l.id} className={'lic-card' + (l.featured ? ' featured' : '')}>
+                {l.featured && (
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--crimson-400)', background: 'rgba(163,22,31,.15)', border: '1px solid var(--border-hot)', borderRadius: 999, padding: '3px 10px', alignSelf: 'flex-start' }}>
+                    ◈ Recommandé
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>{l.label}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', marginTop: 4, letterSpacing: '.1em' }}>{l.tag}</div>
+                </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 32, color: l.featured ? 'var(--crimson-400)' : 'var(--fg-1)', letterSpacing: '.04em' }}>{l.price}</div>
+                <div style={{ height: 1, background: 'var(--border)' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {l.features.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{ color: 'var(--ember-400)', fontSize: 12, flexShrink: 0 }}>✓</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-2)' }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-
-          {/* Détail */}
-          {selected ? (
-            <div style={{background:'var(--ink-850)',border:'1px solid var(--border)',borderRadius:12,padding:'24px'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16}}>
-                <div>
-                  <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)'}}>{selected.name}</div>
-                  <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',marginTop:2}}>{selected.email}</div>
-                  <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:2,letterSpacing:'.08em'}}>{fmt(selected.createdAt)}</div>
-                </div>
-                <button onClick={()=>{ if(confirm('Supprimer ce message ?')) del(selected); }} style={T.btnD}>🗑 Supprimer</button>
-              </div>
-              <div style={{height:1,background:'var(--border)',marginBottom:16}} />
-              <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:8}}>Sujet</div>
-              <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:15,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:16}}>{selected.subject}</div>
-              <div style={{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:8}}>Message</div>
-              <div style={{fontFamily:'var(--font-sans)',fontSize:14,lineHeight:1.7,color:'var(--fg-2)',whiteSpace:'pre-wrap'}}>{selected.body}</div>
-              <div style={{marginTop:20}}>
-                <a href={`mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject)}`}
-                  style={{...S.btnP,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>
-                  ✉ Répondre par email
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div style={{background:'var(--ink-850)',border:'1px dashed var(--border)',borderRadius:12,padding:'60px 24px',textAlign:'center',color:'var(--fg-3)',fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.16em',textTransform:'uppercase'}}>
-              Sélectionner un message
-            </div>
-          )}
+          <div style={{ marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '.12em' }}>
+            Pour modifier les tarifs ou les conditions, contactez le développeur.
+          </div>
         </div>
-      )}
-    </div>
-  );
-};
+      );
+    };
 
-// ── Section : Licences ───────────────────────────────────────────────────────
-const LicencesSection = () => {
-  const licences = [
-    {
-      id:'basic', label:'Licence Basique', price:'29 €',
-      tag:'Pour les artistes émergents',
-      features:['Utilisation non commerciale','1 projet / mixtape','500 copies physiques','Streaming illimité','Crédit obligatoire'],
-      featured:false,
-    },
-    {
-      id:'premium', label:'Licence Premium', price:'79 €',
-      tag:'Pour les releases commerciales',
-      features:['Utilisation commerciale','Projets illimités','Copies illimitées','Streaming illimité','Retrait du crédit possible','Revente en single'],
-      featured:true,
-    },
-    {
-      id:'exclu', label:'Exclusivité', price:'Sur devis',
-      tag:'Droits complets & uniques',
-      features:['Droits exclusifs complets','Retrait de la vente immédiat','Transfert de copyright','Utilisation TV / Cinéma','Accompagnement personnalisé'],
-      featured:false,
-    },
-  ];
-
-  return (
-    <div style={{padding:'32px'}}>
-      <div style={S.eye}>◈ types de licences</div>
-      <h1 style={{...S.h2,fontSize:28,margin:'4px 0 8px'}}>Licences</h1>
-      <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.1em',textTransform:'uppercase',marginBottom:28}}>
-        Ces tarifs sont affichés sur la page d'achat publique
+    // ── Section : Paramètres ─────────────────────────────────────────────────────
+    const ParametresSection = () => (
+      <div style={{ padding: '32px' }}>
+        <div style={S.eye}>⚙ configuration</div>
+        <h1 style={{ ...S.h2, fontSize: 28, margin: '4px 0 24px' }}>Paramètres</h1>
+        <div style={{ background: 'var(--ink-850)', border: '1px dashed var(--border-strong)', borderRadius: 12, padding: '60px 40px', textAlign: 'center', maxWidth: 560 }}>
+          <div style={{ fontSize: 32, marginBottom: 16 }}>⚙</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 18, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--fg-1)', marginBottom: 8 }}>Paramètres du site</div>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--fg-3)', lineHeight: 1.6 }}>
+            Nom du site, bio, liens réseaux sociaux et configuration générale.<br />
+            Cette section sera disponible prochainement.
+          </div>
+        </div>
       </div>
-      <div className="lic-grid">
-        {licences.map(l => (
-          <div key={l.id} className={'lic-card'+(l.featured?' featured':'')}>
-            {l.featured && (
-              <div style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--crimson-400)',background:'rgba(163,22,31,.15)',border:'1px solid var(--border-hot)',borderRadius:999,padding:'3px 10px',alignSelf:'flex-start'}}>
-                ◈ Recommandé
+    );
+
+    // ── Sidebar ──────────────────────────────────────────────────────────────────
+    const AdminSidebar = ({ active, setActive, beats }) => {
+      const nav = [
+        { id: 'overview', icon: '⊞', label: 'Vue d\'ensemble' },
+        { id: 'catalogue', icon: '♪', label: 'Catalogue' },
+        { id: 'messages', icon: '✉', label: 'Messages' },
+        { id: 'licences', icon: '◈', label: 'Licences' },
+        { id: 'parametres', icon: '⚙', label: 'Paramètres' },
+      ];
+
+      return (
+        <aside className="admin-sidebar">
+          {/* Logo */}
+          <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, letterSpacing: '.26em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>KHEN FU</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--crimson-500)', marginTop: 2 }}>Interface Admin</div>
+          </div>
+
+          {/* Navigation */}
+          <nav style={{ flex: 1, paddingTop: 8 }}>
+            {nav.map(n => (
+              <div key={n.id} className={'nav-item' + (active === n.id ? ' on' : '')} onClick={() => setActive(n.id)}>
+                <span className="icon">{n.icon}</span>
+                <span>{n.label}</span>
+                {n.id === 'catalogue' && beats.length > 0 && (
+                  <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 9, background: 'var(--ink-800)', border: '1px solid var(--border)', borderRadius: 999, padding: '1px 7px', color: 'var(--fg-3)' }}>{beats.length}</span>
+                )}
               </div>
-            )}
-            <div>
-              <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)'}}>{l.label}</div>
-              <div style={{fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',marginTop:4,letterSpacing:'.1em'}}>{l.tag}</div>
-            </div>
-            <div style={{fontFamily:'var(--font-display)',fontWeight:900,fontSize:32,color:l.featured?'var(--crimson-400)':'var(--fg-1)',letterSpacing:'.04em'}}>{l.price}</div>
-            <div style={{height:1,background:'var(--border)'}} />
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {l.features.map((f,i) => (
-                <div key={i} style={{display:'flex',gap:8,alignItems:'center'}}>
-                  <span style={{color:'var(--ember-400)',fontSize:12,flexShrink:0}}>✓</span>
-                  <span style={{fontFamily:'var(--font-sans)',fontSize:13,color:'var(--fg-2)'}}>{f}</span>
-                </div>
-              ))}
-            </div>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
+            <a href="../../showcase/index.html" target="_blank" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--fg-3)', textDecoration: 'none' }}>
+              <span>↗</span><span>Voir le site</span>
+            </a>
           </div>
-        ))}
-      </div>
-      <div style={{marginTop:20,fontFamily:'var(--font-mono)',fontSize:10,color:'var(--fg-3)',letterSpacing:'.12em'}}>
-        Pour modifier les tarifs ou les conditions, contactez le développeur.
-      </div>
-    </div>
-  );
-};
+        </aside>
+      );
+    };
 
-// ── Section : Paramètres ─────────────────────────────────────────────────────
-const ParametresSection = () => (
-  <div style={{padding:'32px'}}>
-    <div style={S.eye}>⚙ configuration</div>
-    <h1 style={{...S.h2,fontSize:28,margin:'4px 0 24px'}}>Paramètres</h1>
-    <div style={{background:'var(--ink-850)',border:'1px dashed var(--border-strong)',borderRadius:12,padding:'60px 40px',textAlign:'center',maxWidth:560}}>
-      <div style={{fontSize:32,marginBottom:16}}>⚙</div>
-      <div style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:18,letterSpacing:'.08em',textTransform:'uppercase',color:'var(--fg-1)',marginBottom:8}}>Paramètres du site</div>
-      <div style={{fontFamily:'var(--font-sans)',fontSize:14,color:'var(--fg-3)',lineHeight:1.6}}>
-        Nom du site, bio, liens réseaux sociaux et configuration générale.<br/>
-        Cette section sera disponible prochainement.
-      </div>
-    </div>
-  </div>
-);
+    // ── App ──────────────────────────────────────────────────────────────────────
+    const App = () => {
+      const [section, setSection] = React.useState('overview');
+      const [beats, setBeats] = React.useState([]);
+      const [loading, setLoading] = React.useState(true);
+      const [drawer, setDrawer] = React.useState(null);
+      const [toast, setToast] = React.useState(null);
+      const [dragSrc, setDragSrc] = React.useState(null);
+      const [dragOver, setDragOver] = React.useState(null);
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
-const AdminSidebar = ({ active, setActive, beats }) => {
-  const nav = [
-    { id:'overview',    icon:'⊞', label:'Vue d\'ensemble' },
-    { id:'catalogue',   icon:'♪', label:'Catalogue' },
-    { id:'messages',    icon:'✉', label:'Messages' },
-    { id:'licences',    icon:'◈', label:'Licences' },
-    { id:'parametres',  icon:'⚙', label:'Paramètres' },
-  ];
+      const showToast = (msg, err = false) => setToast({ msg, err });
 
-  return (
-    <aside className="admin-sidebar">
-      {/* Logo */}
-      <div style={{padding:'24px 20px 16px',borderBottom:'1px solid var(--border)'}}>
-        <div style={{fontFamily:'var(--font-display)',fontWeight:900,fontSize:16,letterSpacing:'.26em',textTransform:'uppercase',color:'var(--fg-1)'}}>KHEN FU</div>
-        <div style={{fontFamily:'var(--font-mono)',fontSize:9,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--crimson-500)',marginTop:2}}>Interface Admin</div>
-      </div>
+      const load = async () => {
+        setLoading(true);
+        try { setBeats(await (await fetch(API)).json()); }
+        catch { showToast('Impossible de charger les beats', true); }
+        finally { setLoading(false); }
+      };
 
-      {/* Navigation */}
-      <nav style={{flex:1,paddingTop:8}}>
-        {nav.map(n => (
-          <div key={n.id} className={'nav-item'+(active===n.id?' on':'')} onClick={()=>setActive(n.id)}>
-            <span className="icon">{n.icon}</span>
-            <span>{n.label}</span>
-            {n.id==='catalogue' && beats.length > 0 && (
-              <span style={{marginLeft:'auto',fontFamily:'var(--font-mono)',fontSize:9,background:'var(--ink-800)',border:'1px solid var(--border)',borderRadius:999,padding:'1px 7px',color:'var(--fg-3)'}}>{beats.length}</span>
-            )}
+      React.useEffect(() => { load(); }, []);
+
+      const handleSaved = (saved, isEdit) => {
+        setDrawer(null); load();
+        showToast(isEdit ? `${saved.title} mis à jour` : `${saved.title} ajouté`);
+      };
+
+      const handleDelete = async beat => {
+        try {
+          await fetch(`${API}/${beat.id}`, { method: 'DELETE' });
+          setBeats(b => b.filter(x => x.id !== beat.id));
+          showToast(`${beat.title} supprimé`);
+        } catch { showToast('Erreur suppression', true); }
+      };
+
+      const handleToggleCarousel = async (beat, val) => {
+        try {
+          const fd = new FormData(); fd.append('inCarousel', val);
+          await fetch(`${API}/${beat.id}`, { method: 'POST', body: fd });
+          setBeats(b => b.map(x => x.id === beat.id ? { ...x, inCarousel: val } : x));
+        } catch { showToast('Erreur', true); }
+      };
+
+      const handleDragStart = beat => setDragSrc(beat);
+      const handleDragOver = beat => { if (!dragSrc || dragSrc.id === beat.id) return; setDragOver(beat.id); };
+
+      const handleDrop = async target => {
+        if (!dragSrc || dragSrc.id === target.id) { setDragSrc(null); setDragOver(null); return; }
+        const reordered = [...beats];
+        const si = reordered.findIndex(b => b.id === dragSrc.id);
+        const ti = reordered.findIndex(b => b.id === target.id);
+        reordered.splice(si, 1); reordered.splice(ti, 0, dragSrc);
+        const positions = reordered.map((b, i) => ({ id: b.id, position: i }));
+        setBeats(reordered); setDragSrc(null); setDragOver(null);
+        try {
+          await fetch(`${API}/reorder`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(positions) });
+          showToast('Ordre sauvegardé');
+        } catch { showToast('Erreur sauvegarde ordre', true); load(); }
+      };
+
+      const openNew = () => { setSection('catalogue'); setDrawer('new'); };
+
+      return (
+        <div className="admin-layout">
+          <AdminSidebar active={section} setActive={setSection} beats={beats} />
+
+          <div className="admin-main">
+            {section === 'overview' && <OverviewSection beats={beats} onGoTo={s => { setSection(s); if (s === 'catalogue') setDrawer('new'); }} />}
+            {section === 'catalogue' && <CatalogueSection beats={beats} loading={loading} onEdit={setDrawer} onDelete={handleDelete}
+              onToggleCarousel={handleToggleCarousel} onDragStart={handleDragStart} onDragOver={handleDragOver}
+              onDrop={handleDrop} dragOver={dragOver} onNew={() => setDrawer('new')} />}
+            {section === 'messages' && <MessagesSection />}
+            {section === 'licences' && <LicencesSection />}
+            {section === 'parametres' && <ParametresSection />}
           </div>
-        ))}
-      </nav>
 
-      {/* Footer */}
-      <div style={{padding:'16px 20px',borderTop:'1px solid var(--border)'}}>
-        <a href="../../showcase/index.html" target="_blank" style={{display:'flex',alignItems:'center',gap:8,fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--fg-3)',textDecoration:'none'}}>
-          <span>↗</span><span>Voir le site</span>
-        </a>
-      </div>
-    </aside>
-  );
-};
+          {drawer && <BeatForm beat={drawer === 'new' ? null : drawer} onClose={() => setDrawer(null)} onSaved={handleSaved} />}
+          {toast && <Toast msg={toast.msg} err={toast.err} onDone={() => setToast(null)} />}
+        </div>
+      );
+    };
 
-// ── App ──────────────────────────────────────────────────────────────────────
-const App = () => {
-  const [section, setSection]   = React.useState('overview');
-  const [beats, setBeats]       = React.useState([]);
-  const [loading, setLoading]   = React.useState(true);
-  const [drawer, setDrawer]     = React.useState(null);
-  const [toast, setToast]       = React.useState(null);
-  const [dragSrc, setDragSrc]   = React.useState(null);
-  const [dragOver, setDragOver] = React.useState(null);
+    const S = {
+      eye: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.24em', textTransform: 'uppercase', color: 'var(--ember-400)', marginBottom: 4 },
+      h2: { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, letterSpacing: '.08em', textTransform: 'uppercase', margin: 0, color: 'var(--fg-1)' },
+      xbtn: { background: 'transparent', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--fg-3)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '6px 10px', cursor: 'pointer' },
+      lbl: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-3)' },
+      rule: { height: 1, background: 'var(--border)' },
+      btnP: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 12, letterSpacing: '.2em', textTransform: 'uppercase', padding: '11px 20px', borderRadius: 4, background: 'var(--crimson-600)', color: 'var(--bone-50)', border: '1px solid var(--crimson-700)', boxShadow: 'var(--glow-crimson-sm)', cursor: 'pointer' },
+      btnG: { fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', padding: '11px 16px', borderRadius: 4, background: 'transparent', color: 'var(--fg-2)', border: '1px solid var(--border)', cursor: 'pointer' },
+    };
+    const T = {
+      td: { padding: '10px 12px', verticalAlign: 'middle' },
+      btnE: { fontFamily: 'var(--font-mono)', fontSize: 11, padding: '6px 10px', borderRadius: 4, background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-2)', cursor: 'pointer' },
+      btnD: { fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '.1em', padding: '6px 10px', borderRadius: 4, background: 'rgba(163,22,31,.15)', border: '1px solid var(--border-hot)', color: 'var(--crimson-400)', cursor: 'pointer' },
+      btnG: { fontFamily: 'var(--font-mono)', fontSize: 10, padding: '6px 8px', borderRadius: 4, background: 'transparent', border: '1px solid var(--border)', color: 'var(--fg-3)', cursor: 'pointer' },
+    };
 
-  const showToast = (msg, err=false) => setToast({msg,err});
-
-  const load = async () => {
-    setLoading(true);
-    try { setBeats(await (await fetch(API)).json()); }
-    catch { showToast('Impossible de charger les beats',true); }
-    finally { setLoading(false); }
-  };
-
-  React.useEffect(()=>{ load(); },[]);
-
-  const handleSaved = (saved, isEdit) => {
-    setDrawer(null); load();
-    showToast(isEdit?`${saved.title} mis à jour`:`${saved.title} ajouté`);
-  };
-
-  const handleDelete = async beat => {
-    try {
-      await fetch(`${API}/${beat.id}`,{method:'DELETE'});
-      setBeats(b=>b.filter(x=>x.id!==beat.id));
-      showToast(`${beat.title} supprimé`);
-    } catch { showToast('Erreur suppression',true); }
-  };
-
-  const handleToggleCarousel = async (beat, val) => {
-    try {
-      const fd = new FormData(); fd.append('inCarousel', val);
-      await fetch(`${API}/${beat.id}`,{method:'POST',body:fd});
-      setBeats(b=>b.map(x=>x.id===beat.id?{...x,inCarousel:val}:x));
-    } catch { showToast('Erreur',true); }
-  };
-
-  const handleDragStart = beat => setDragSrc(beat);
-  const handleDragOver  = beat => { if(!dragSrc||dragSrc.id===beat.id)return; setDragOver(beat.id); };
-
-  const handleDrop = async target => {
-    if(!dragSrc||dragSrc.id===target.id){setDragSrc(null);setDragOver(null);return;}
-    const reordered=[...beats];
-    const si=reordered.findIndex(b=>b.id===dragSrc.id);
-    const ti=reordered.findIndex(b=>b.id===target.id);
-    reordered.splice(si,1); reordered.splice(ti,0,dragSrc);
-    const positions=reordered.map((b,i)=>({id:b.id,position:i}));
-    setBeats(reordered); setDragSrc(null); setDragOver(null);
-    try {
-      await fetch(`${API}/reorder`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(positions)});
-      showToast('Ordre sauvegardé');
-    } catch { showToast('Erreur sauvegarde ordre',true); load(); }
-  };
-
-  const openNew = () => { setSection('catalogue'); setDrawer('new'); };
-
-  return (
-    <div className="admin-layout">
-      <AdminSidebar active={section} setActive={setSection} beats={beats} />
-
-      <div className="admin-main">
-        {section==='overview'   && <OverviewSection beats={beats} onGoTo={s=>{setSection(s);if(s==='catalogue')setDrawer('new');}} />}
-        {section==='catalogue'  && <CatalogueSection beats={beats} loading={loading} onEdit={setDrawer} onDelete={handleDelete}
-            onToggleCarousel={handleToggleCarousel} onDragStart={handleDragStart} onDragOver={handleDragOver}
-            onDrop={handleDrop} dragOver={dragOver} onNew={()=>setDrawer('new')} />}
-        {section==='messages'   && <MessagesSection />}
-        {section==='licences'   && <LicencesSection />}
-        {section==='parametres' && <ParametresSection />}
-      </div>
-
-      {drawer && <BeatForm beat={drawer==='new'?null:drawer} onClose={()=>setDrawer(null)} onSaved={handleSaved} />}
-      {toast  && <Toast msg={toast.msg} err={toast.err} onDone={()=>setToast(null)} />}
-    </div>
-  );
-};
-
-const S = {
-  eye: {fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.24em',textTransform:'uppercase',color:'var(--ember-400)',marginBottom:4},
-  h2:  {fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'.08em',textTransform:'uppercase',margin:0,color:'var(--fg-1)'},
-  xbtn:{background:'transparent',border:'1px solid var(--border)',borderRadius:4,color:'var(--fg-3)',fontFamily:'var(--font-mono)',fontSize:12,padding:'6px 10px',cursor:'pointer'},
-  lbl: {fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.18em',textTransform:'uppercase',color:'var(--fg-3)'},
-  rule:{height:1,background:'var(--border)'},
-  btnP:{fontFamily:'var(--font-display)',fontWeight:600,fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',padding:'11px 20px',borderRadius:4,background:'var(--crimson-600)',color:'var(--bone-50)',border:'1px solid var(--crimson-700)',boxShadow:'var(--glow-crimson-sm)',cursor:'pointer'},
-  btnG:{fontFamily:'var(--font-mono)',fontSize:11,letterSpacing:'.16em',textTransform:'uppercase',padding:'11px 16px',borderRadius:4,background:'transparent',color:'var(--fg-2)',border:'1px solid var(--border)',cursor:'pointer'},
-};
-const T = {
-  td:  {padding:'10px 12px',verticalAlign:'middle'},
-  btnE:{fontFamily:'var(--font-mono)',fontSize:11,padding:'6px 10px',borderRadius:4,background:'transparent',border:'1px solid var(--border)',color:'var(--fg-2)',cursor:'pointer'},
-  btnD:{fontFamily:'var(--font-mono)',fontSize:10,letterSpacing:'.1em',padding:'6px 10px',borderRadius:4,background:'rgba(163,22,31,.15)',border:'1px solid var(--border-hot)',color:'var(--crimson-400)',cursor:'pointer'},
-  btnG:{fontFamily:'var(--font-mono)',fontSize:10,padding:'6px 8px',borderRadius:4,background:'transparent',border:'1px solid var(--border)',color:'var(--fg-3)',cursor:'pointer'},
-};
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
 </body>
+
 </html>

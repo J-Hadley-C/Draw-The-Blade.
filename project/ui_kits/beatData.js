@@ -1,5 +1,5 @@
 // beatData.js — chargement dynamique des beats depuis l'API Symfony
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = window.APP_CONFIG.API_BASE;
 
 window.BEATS = [];
 window.BEAT_GENRES = ['All', 'Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
