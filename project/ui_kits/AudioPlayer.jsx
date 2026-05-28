@@ -35,7 +35,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
       setPlaying(true);
       if (trackedRef.current !== beat.id) {
         trackedRef.current = beat.id;
-        fetch(`${API_BASE}/api/beats/${beat.id}/play`, { method: 'POST' })
+        fetch(`${window.APP_CONFIG.API_BASE}/api/beats/${beat.id}/play`, { method: 'POST' })
           .then(r => r.json())
           .then(d => setPlays(d.playCount))
           .catch(() => {});
@@ -45,7 +45,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
 
   const handleLike = (type) => {
     if (!beat) return;
-    fetch(`${API_BASE}/api/beats/${beat.id}/like`, {
+    fetch(`${window.APP_CONFIG.API_BASE}/api/beats/${beat.id}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type }),
