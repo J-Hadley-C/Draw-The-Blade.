@@ -113,7 +113,21 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
         <button onClick={toggle} style={{ ...apStyles.playBtn, opacity: hasAudio ? 1 : 0.35 }} title={hasAudio ? '' : 'Audio non disponible'}>
           {playing ? '⏸' : '▶'}
         </button>
-        <div style={apStyles.seekWrap} onClick={seek}>
+        <div
+          style={apStyles.seekWrap}
+          onClick={seek}
+          role="slider"
+          tabIndex={0}
+          aria-label="Position de lecture"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow={`${Math.round(progress)}`}
+          onKeyDown={e => {
+            if (!audioRef.current || !beat || !beat.audio) return;
+            if (e.key === 'ArrowRight') audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
+            if (e.key === 'ArrowLeft')  audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 5);
+          }}
+        >
           <div style={apStyles.seekBg}>
             <div style={{ ...apStyles.seekFill, width: `${progress}%` }} />
             <div style={{ ...apStyles.seekThumb, left: `${progress}%` }} />
