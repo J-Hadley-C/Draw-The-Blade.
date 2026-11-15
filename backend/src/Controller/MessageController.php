@@ -6,10 +6,13 @@ use App\Entity\Message;
 use App\Repository\MessageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/messages', name: 'api_messages_')]
 class MessageController extends AbstractController
@@ -18,40 +21,70 @@ class MessageController extends AbstractController
         private MessageRepository $repo,
         private EntityManagerInterface $em,
         private SerializerInterface $serializer,
+        private ValidatorInterface $validator,
+        private RateLimiterFactory $contactFormLimiter,
     ) {}
 
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(): Response
     {
-        $messages = $this->repo->findAllOrderedByDate();
-        $json = $this->serializer->serialize($messages, 'json', ['groups' => 'message:read']);
-        return new Response($json, 200, ['Content-Type' => 'application/json']);
+        return new Response(
+            $this->serializer->serialize($this->repo->findAllOrderedByDate(), 'json', ['groups' => 'message:read']),
+            200,
+            ['Content-Type' => 'application/json'],
+        );
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(Request $request): Response
     {
-        $data = json_decode($request->getContent(), true) ?? [];
-
-        if (empty($data['name']) || empty($data['email']) || empty($data['subject']) || empty($data['body'])) {
-            return new Response(json_encode(['error' => 'Champs manquants']), 400, ['Content-Type' => 'application/json']);
+        $limit = $this->contactFormLimiter->create((string) $request->getClientIp())->consume();
+        if (!$limit->isAccepted()) {
+            return new JsonResponse(
+                ['error' => 'Trop de messages envoyés. Réessaie plus tard.'],
+                429,
+                ['Retry-After' => (string) max(1, $limit->getRetryAfter()->getTimestamp() - time())],
+            );
         }
 
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return new Response(json_encode(['error' => 'Format email invalide']), 400, ['Content-Type' => 'application/json']);
+        try {
+            $data = json_decode($request->getContent(), true, 8, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return new JsonResponse(['error' => 'JSON invalide'], 400);
         }
+        if (!is_array($data)) {
+            return new JsonResponse(['error' => 'Format invalide'], 400);
+        }
+
+        // Champ piège : invisible pour un humain, rempli par les robots. On répond « succès » sans rien enregistrer.
+        if (!empty($data['website'])) {
+            return new JsonResponse(['ok' => true], 201);
+        }
+
+        $field = static fn(string $k): string => isset($data[$k]) && is_string($data[$k])
+            ? trim(preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $data[$k]) ?? '')
+            : '';
 
         $message = (new Message())
-            ->setName(trim($data['name']))
-            ->setEmail(trim($data['email']))
-            ->setSubject(trim($data['subject']))
-            ->setBody(trim($data['body']));
+            ->setName($field('name'))
+            ->setEmail($field('email'))
+            ->setSubject($field('subject'))
+            ->setBody($field('body'));
+
+        $violations = $this->validator->validate($message);
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $v) {
+                $errors[$v->getPropertyPath()] = $v->getMessage();
+            }
+            return new JsonResponse(['error' => 'Données invalides', 'details' => $errors], 422);
+        }
 
         $this->em->persist($message);
         $this->em->flush();
 
-        $json = $this->serializer->serialize($message, 'json', ['groups' => 'message:read']);
-        return new Response($json, 201, ['Content-Type' => 'application/json']);
+        // Simple accusé de réception : on ne renvoie pas le message au visiteur.
+        return new JsonResponse(['ok' => true], 201);
     }
 
     #[Route('/{id}/read', name: 'mark_read', methods: ['PATCH'], requirements: ['id' => '\d+'])]

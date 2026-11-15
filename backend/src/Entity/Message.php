@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: 'App\Repository\MessageRepository')]
 #[ORM\Table(name: 'messages')]
@@ -17,18 +18,27 @@ class Message
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 100)]
     #[Groups(['message:read'])]
     private string $name;
 
     #[ORM\Column(type: 'string', length: 180)]
+    #[Assert\NotBlank]
+    #[Assert\Email]
+    #[Assert\Length(max: 180)]
     #[Groups(['message:read'])]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     #[Groups(['message:read'])]
     private string $subject;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 5000)]
     #[Groups(['message:read'])]
     private string $body;
 
