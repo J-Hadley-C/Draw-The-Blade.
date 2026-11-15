@@ -253,3 +253,23 @@
 .ds-base *, .ds-base *::before, .ds-base *::after {
   box-sizing: border-box;
 }
+
+/* =========================================================
+   ACCESSIBILITÉ
+   ========================================================= */
+/* Focus clavier visible partout (jamais retiré à la souris) */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ember-400, #e09620);
+  outline-offset: 2px;
+}
+
+/* Respect du réglage « réduire les animations » : plus de rotation continue ni de transitions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .carousel { animation: none !important; }
+}

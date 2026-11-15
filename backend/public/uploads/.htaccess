@@ -1,0 +1,8 @@
+# Dossier de dépôts : jamais d'exécution de scripts, jamais de listing.
+Options -Indexes -ExecCGI
+<FilesMatch "\.(php|phtml|phar|html?|svg|js)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

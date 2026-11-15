@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: http://127.0.0.1:8000 http://localhost:8000; media-src 'self' blob: http://127.0.0.1:8000 http://localhost:8000; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#070506">
+<meta name="description" content="Contacte Khen Fu pour une collaboration, une commande de beat ou une licence.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Khen Fu · Contact">
+<meta property="og:description" content="Contacte Khen Fu pour une collaboration, une commande de beat ou une licence.">
+<meta name="twitter:card" content="summary">
 <title>Khen Fu · Contact</title>
 <link rel="stylesheet" href="../../colors_and_type.css">
 <style>
@@ -28,8 +36,8 @@
   }
 </style>
 <script src="../config.js"></script>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -41,21 +49,38 @@ const ContactPage = () => {
   const prefill = new URLSearchParams(window.location.search).get('subject') || '';
   const [form, setForm]     = React.useState({ name:'', email:'', subject: prefill, body:'' });
   const [status, setStatus] = React.useState(null); // null | 'sending' | 'ok' | 'err'
+  const [errMsg, setErrMsg] = React.useState('');
+  const [trap, setTrap]     = React.useState(''); // champ piège anti-robots (doit rester vide)
   const set = (k, v) => setForm(f => ({...f, [k]: v}));
 
   const submit = async e => {
     e.preventDefault();
     setStatus('sending');
+    setErrMsg('');
     try {
       const res = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, website: trap }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        let msg = "Erreur d'envoi — vérifie ta connexion et réessaie.";
+        if (res.status === 429) msg = 'Trop de messages envoyés. Réessaie un peu plus tard.';
+        else if (res.status === 422) {
+          try {
+            const j = await res.json();
+            const d = Object.values(j.details || {});
+            if (d.length) msg = 'Vérifie le formulaire : ' + d.join(' ');
+          } catch {}
+        }
+        setErrMsg(msg);
+        setStatus('err');
+        return;
+      }
       setStatus('ok');
       setForm({ name:'', email:'', subject:'', body:'' });
     } catch {
+      setErrMsg("Serveur injoignable — vérifie ta connexion et réessaie.");
       setStatus('err');
     }
   };
@@ -107,28 +132,34 @@ const ContactPage = () => {
 
               <div id="contact-names" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:12}}>
                 <div style={ns.field}>
-                  <label style={ns.lbl}>Nom</label>
-                  <input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ton nom" required />
+                  <label htmlFor="f-name" style={ns.lbl}>Nom</label>
+                  <input id="f-name" name="name" autoComplete="name" maxLength={100} value={form.name} onChange={e=>set('name',e.target.value)} placeholder="Ton nom" required />
                 </div>
                 <div style={ns.field}>
-                  <label style={ns.lbl}>Email</label>
-                  <input type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="ton@email.com" required />
+                  <label htmlFor="f-email" style={ns.lbl}>Email</label>
+                  <input id="f-email" name="email" autoComplete="email" maxLength={180} type="email" value={form.email} onChange={e=>set('email',e.target.value)} placeholder="ton@email.com" required />
                 </div>
               </div>
 
               <div style={ns.field}>
-                <label style={ns.lbl}>Sujet</label>
-                <input value={form.subject} onChange={e=>set('subject',e.target.value)} placeholder="Collab / Commande / Licence / Autre" required />
+                <label htmlFor="f-subject" style={ns.lbl}>Sujet</label>
+                <input id="f-subject" name="subject" maxLength={255} value={form.subject} onChange={e=>set('subject',e.target.value)} placeholder="Collab / Commande / Licence / Autre" required />
               </div>
 
               <div style={ns.field}>
-                <label style={ns.lbl}>Message</label>
-                <textarea value={form.body} onChange={e=>set('body',e.target.value)} placeholder="Décris ton projet, ta demande..." required />
+                <label htmlFor="f-body" style={ns.lbl}>Message</label>
+                <textarea id="f-body" name="message" minLength={5} maxLength={5000} value={form.body} onChange={e=>set('body',e.target.value)} placeholder="Décris ton projet, ta demande..." required />
+              </div>
+
+              {/* Champ piège : hors écran, ignoré des lecteurs d'écran et du clavier */}
+              <div aria-hidden="true" style={{position:'absolute', left:'-10000px', width:1, height:1, overflow:'hidden'}}>
+                <label htmlFor="f-website">Ne pas remplir</label>
+                <input id="f-website" name="website" tabIndex={-1} autoComplete="off" value={trap} onChange={e=>setTrap(e.target.value)} />
               </div>
 
               {status === 'err' && (
-                <div style={{fontFamily:'var(--font-mono)', fontSize:11, color:'var(--crimson-400)', letterSpacing:'.14em', textTransform:'uppercase'}}>
-                  ✕ Erreur d'envoi — vérifie ta connexion et réessaie.
+                <div role="alert" style={{fontFamily:'var(--font-mono)', fontSize:11, color:'var(--crimson-400)', letterSpacing:'.14em', textTransform:'uppercase'}}>
+                  ✕ {errMsg}
                 </div>
               )}
 

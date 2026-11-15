@@ -4,6 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: http://127.0.0.1:8000 http://localhost:8000; media-src 'self' blob: http://127.0.0.1:8000 http://localhost:8000; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#070506">
+<meta name="robots" content="noindex, nofollow">
   <title>Khen Fu · Admin</title>
   <link rel="stylesheet" href="../../colors_and_type.css">
   <style>
@@ -390,11 +394,11 @@
       pointer-events: none;
     }
   </style>
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
-    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+    integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
     crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
-    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+    integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
     crossorigin="anonymous"></script>
   <script src="../config.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
@@ -411,28 +415,48 @@
     const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
 
     const STORAGE_KEY = 'kf_admin_token';
+    // Le jeton reste en sessionStorage (effacé à la fermeture de l'onglet) ; on purge l'ancien stockage persistant.
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    const readToken  = () => { try { return sessionStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
+    const saveToken  = t  => { try { sessionStorage.setItem(STORAGE_KEY, t); } catch {} };
+    const clearToken = () => { try { sessionStorage.removeItem(STORAGE_KEY); } catch {} };
+    // Un 401 sur une requête admin = jeton refusé ou expiré : on se déconnecte proprement.
+    const _fetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const res = await _fetch(...args);
+      const h = args[1] && args[1].headers;
+      if (res.status === 401 && h && h['X-Admin-Token'] && !String(args[0]).endsWith('/api/admin/check')) {
+        clearToken(); window.location.reload();
+      }
+      return res;
+    };
+    const AUTH_ERRORS = {
+      401: 'Token invalide',
+      429: 'Trop de tentatives. Réessaie dans 15 minutes.',
+      503: 'Administration non configurée côté serveur (ADMIN_TOKEN).',
+    };
 
     const LoginScreen = ({ onAuth }) => {
       const [token, setToken] = React.useState('');
-      const [err, setErr]     = React.useState(false);
+      const [err, setErr]     = React.useState('');
       const [loading, setLoading] = React.useState(false);
 
       const attempt = async e => {
         e.preventDefault();
-        setErr(false);
+        setErr('');
         setLoading(true);
         try {
-          const res = await fetch(`${API_BASE}/api/messages`, {
-            headers: { 'X-Admin-Token': token }
+          const res = await fetch(`${API_BASE}/api/admin/check`, {
+            headers: { 'X-Admin-Token': token.trim() }
           });
           if (res.ok) {
-            localStorage.setItem(STORAGE_KEY, token);
-            onAuth(token);
+            saveToken(token.trim());
+            onAuth(token.trim());
           } else {
-            setErr(true);
+            setErr(AUTH_ERRORS[res.status] || `Erreur serveur (${res.status})`);
           }
         } catch {
-          setErr(true);
+          setErr('Serveur injoignable');
         } finally {
           setLoading(false);
         }
@@ -441,7 +465,7 @@
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)', backgroundImage: 'radial-gradient(ellipse 60% 40% at 50% 55%, rgba(163,22,31,.1) 0%, transparent 70%)' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 10, letterSpacing: '.44em', textTransform: 'uppercase', color: 'var(--crimson-800)', marginBottom: 36, textAlign: 'center' }}>DRAW THE BLADE</div>
-          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--crimson-900)', borderRadius: 4, padding: 40, width: 320, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: 'var(--glow-crimson-sm), var(--shadow-lg)' }}>
+          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--crimson-900)', borderRadius: 4, padding: 40, width: 'min(320px, calc(100vw - 32px))', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: 'var(--glow-crimson-sm), var(--shadow-lg)' }}>
             <div style={{ marginBottom: 4 }}>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 24, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-1)', lineHeight: 1 }}>KHEN FU</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.32em', textTransform: 'uppercase', color: 'var(--crimson-600)', marginTop: 5 }}>INTERFACE ADMIN</div>
@@ -453,8 +477,12 @@
               onChange={e => setToken(e.target.value)}
               style={{ background: 'var(--ink-800)', border: `1px solid ${err ? 'var(--crimson-500)' : 'var(--border)'}`, borderRadius: 6, color: 'var(--fg-1)', fontFamily: 'var(--font-mono)', fontSize: 13, padding: '12px 14px', outline: 'none', width: '100%' }}
               autoFocus
+              autoComplete="current-password"
+              aria-label="Token d'accès"
+              aria-invalid={!!err}
+              aria-describedby={err ? 'login-err' : undefined}
             />
-            {err && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--crimson-500)', letterSpacing: '.1em' }}>Token invalide</span>}
+            {err && <span id="login-err" role="alert" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--crimson-500)', letterSpacing: '.1em' }}>{err}</span>}
             <button type="submit" disabled={loading || !token} style={{ fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', padding: '10px 0', borderRadius: 4, background: 'var(--crimson-600)', color: 'var(--bone-50)', border: 'none', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
               {loading ? 'Vérification…' : 'Entrer'}
             </button>
@@ -532,7 +560,16 @@
           if (audioFile) fd.append('audioFile', audioFile);
           const url = isEdit ? `${API}/${beat.id}` : API;
           const res = await fetch(url, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
-          if (!res.ok) throw new Error(await res.text());
+          if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try {
+              const j = await res.json();
+              msg = j.error || msg;
+              if (j.details) msg += ' — ' + Object.entries(j.details).map(([k, v]) => `${k}: ${v}`).join(' · ');
+            } catch {}
+            if (res.status === 401) { clearToken(); window.location.reload(); }
+            throw new Error(msg);
+          }
           onSaved(await res.json(), isEdit);
         } catch (err) { if (onShowToast) onShowToast('Erreur : ' + err.message, true); }
         finally { setSaving(false); }
@@ -1073,10 +1110,12 @@
 
     // ── App ──────────────────────────────────────────────────────────────────────
     const App = () => {
-      const [adminToken, setAdminToken] = React.useState(() => localStorage.getItem(STORAGE_KEY) || '');
-
+      const [adminToken, setAdminToken] = React.useState(readToken);
       if (!adminToken) return <LoginScreen onAuth={setAdminToken} />;
+      return <Dashboard adminToken={adminToken} />;
+    };
 
+    const Dashboard = ({ adminToken }) => {
       const [section, setSection] = React.useState('overview');
       const [beats, setBeats] = React.useState([]);
       const [loading, setLoading] = React.useState(true);
