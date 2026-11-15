@@ -575,10 +575,12 @@
         finally { setSaving(false); }
       };
 
+      // Fonction de rendu (et non composant) : un composant défini ici serait recréé à chaque frappe
+      // et ferait perdre le focus à l'input.
       const F = ({ lbl, k, type = 'text', ph = '' }) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
-          <label style={S.lbl}>{lbl}</label>
-          <input type={type} value={form[k]} placeholder={ph} onChange={e => set(k, e.target.value)}
+          <label htmlFor={`f-${k}`} style={S.lbl}>{lbl}</label>
+          <input id={`f-${k}`} type={type} value={form[k]} placeholder={ph} onChange={e => set(k, e.target.value)}
             required={['title', 'bpm', 'key', 'duration', 'price'].includes(k)} />
         </div>
       );
@@ -595,7 +597,7 @@
               <button onClick={onClose} style={S.xbtn}>✕</button>
             </div>
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <F lbl="Titre" k="title" ph="Ex: Night Runner" />
+              {F({ lbl: "Titre", k: "title", ph: "Ex: Night Runner" })}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <label style={S.lbl}>Genre</label>
@@ -603,18 +605,18 @@
                     {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
-                <F lbl="BPM" k="bpm" type="number" ph="140" />
+                {F({ lbl: "BPM", k: "bpm", type: "number", ph: "140" })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <F lbl="Tonalité" k="key" ph="Am" />
-                <F lbl="Durée" k="duration" ph="3:24" />
+                {F({ lbl: "Tonalité", k: "key", ph: "Am" })}
+                {F({ lbl: "Durée", k: "duration", ph: "3:24" })}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <label style={S.lbl}>Description</label>
                 <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Dark trap instrumental..." />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'end' }}>
-                <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
+                {F({ lbl: "Prix (€)", k: "price", type: "number", ph: "29.99" })}
                 <Toggle checked={form.isFree} onChange={v => set('isFree', v)} label="Gratuit" />
               </div>
               <Toggle checked={form.inCarousel} onChange={v => set('inCarousel', v)} label="Afficher dans le carousel" />
