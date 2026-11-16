@@ -4,6 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: http://127.0.0.1:8000 http://localhost:8000; media-src 'self' blob: http://127.0.0.1:8000 http://localhost:8000; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#070506">
+<meta name="robots" content="noindex, nofollow">
   <title>Khen Fu · Admin</title>
   <link rel="stylesheet" href="../../colors_and_type.css">
   <style>
@@ -390,11 +394,11 @@
       pointer-events: none;
     }
   </style>
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
-    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+    integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z"
     crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
-    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+    integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1"
     crossorigin="anonymous"></script>
   <script src="../config.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
@@ -408,31 +412,53 @@
     const API_BASE = window.APP_CONFIG.API_BASE;
     const API = `${API_BASE}/api/beats`;
     const UPLOADS = `${API_BASE}/uploads/beats`;
+    // Images déjà utilisées par le carrousel (dossier project/assets/images)
+    const GALLERY = ['1.png','2.png','3.jpg','4.png','5.jpg','6.jpg','7.jpg','8.jpg','9.jpg','10.jpg','11.jpg','12.jpg','13.jpg','14.jpg','15.png','dojosabre.jpg'];
     const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
 
     const STORAGE_KEY = 'kf_admin_token';
+    // Le jeton reste en sessionStorage (effacé à la fermeture de l'onglet) ; on purge l'ancien stockage persistant.
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    const readToken  = () => { try { return sessionStorage.getItem(STORAGE_KEY) || ''; } catch { return ''; } };
+    const saveToken  = t  => { try { sessionStorage.setItem(STORAGE_KEY, t); } catch {} };
+    const clearToken = () => { try { sessionStorage.removeItem(STORAGE_KEY); } catch {} };
+    // Un 401 sur une requête admin = jeton refusé ou expiré : on se déconnecte proprement.
+    const _fetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const res = await _fetch(...args);
+      const h = args[1] && args[1].headers;
+      if (res.status === 401 && h && h['X-Admin-Token'] && !String(args[0]).endsWith('/api/admin/check')) {
+        clearToken(); window.location.reload();
+      }
+      return res;
+    };
+    const AUTH_ERRORS = {
+      401: 'Token invalide',
+      429: 'Trop de tentatives. Réessaie dans 15 minutes.',
+      503: 'Administration non configurée côté serveur (ADMIN_TOKEN).',
+    };
 
     const LoginScreen = ({ onAuth }) => {
       const [token, setToken] = React.useState('');
-      const [err, setErr]     = React.useState(false);
+      const [err, setErr]     = React.useState('');
       const [loading, setLoading] = React.useState(false);
 
       const attempt = async e => {
         e.preventDefault();
-        setErr(false);
+        setErr('');
         setLoading(true);
         try {
-          const res = await fetch(`${API_BASE}/api/messages`, {
-            headers: { 'X-Admin-Token': token }
+          const res = await fetch(`${API_BASE}/api/admin/check`, {
+            headers: { 'X-Admin-Token': token.trim() }
           });
           if (res.ok) {
-            localStorage.setItem(STORAGE_KEY, token);
-            onAuth(token);
+            saveToken(token.trim());
+            onAuth(token.trim());
           } else {
-            setErr(true);
+            setErr(AUTH_ERRORS[res.status] || `Erreur serveur (${res.status})`);
           }
         } catch {
-          setErr(true);
+          setErr('Serveur injoignable');
         } finally {
           setLoading(false);
         }
@@ -441,7 +467,7 @@
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--ink-950)', backgroundImage: 'radial-gradient(ellipse 60% 40% at 50% 55%, rgba(163,22,31,.1) 0%, transparent 70%)' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 10, letterSpacing: '.44em', textTransform: 'uppercase', color: 'var(--crimson-800)', marginBottom: 36, textAlign: 'center' }}>DRAW THE BLADE</div>
-          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--crimson-900)', borderRadius: 4, padding: 40, width: 320, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: 'var(--glow-crimson-sm), var(--shadow-lg)' }}>
+          <form onSubmit={attempt} style={{ background: 'var(--ink-900)', border: '1px solid var(--crimson-900)', borderRadius: 4, padding: 40, width: 'min(320px, calc(100vw - 32px))', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 16, boxShadow: 'var(--glow-crimson-sm), var(--shadow-lg)' }}>
             <div style={{ marginBottom: 4 }}>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 24, letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--fg-1)', lineHeight: 1 }}>KHEN FU</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '.32em', textTransform: 'uppercase', color: 'var(--crimson-600)', marginTop: 5 }}>INTERFACE ADMIN</div>
@@ -453,8 +479,12 @@
               onChange={e => setToken(e.target.value)}
               style={{ background: 'var(--ink-800)', border: `1px solid ${err ? 'var(--crimson-500)' : 'var(--border)'}`, borderRadius: 6, color: 'var(--fg-1)', fontFamily: 'var(--font-mono)', fontSize: 13, padding: '12px 14px', outline: 'none', width: '100%' }}
               autoFocus
+              autoComplete="current-password"
+              aria-label="Token d'accès"
+              aria-invalid={!!err}
+              aria-describedby={err ? 'login-err' : undefined}
             />
-            {err && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--crimson-500)', letterSpacing: '.1em' }}>Token invalide</span>}
+            {err && <span id="login-err" role="alert" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--crimson-500)', letterSpacing: '.1em' }}>{err}</span>}
             <button type="submit" disabled={loading || !token} style={{ fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: '.2em', textTransform: 'uppercase', padding: '10px 0', borderRadius: 4, background: 'var(--crimson-600)', color: 'var(--bone-50)', border: 'none', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1 }}>
               {loading ? 'Vérification…' : 'Entrer'}
             </button>
@@ -465,7 +495,7 @@
 
     function imgSrc(beat) {
       if (!beat.imagePath) return null;
-      if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
+      if (GALLERY.includes(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
       return `${UPLOADS}/${beat.imagePath}`;
     }
 
@@ -507,7 +537,7 @@
     };
 
     // ── BeatForm ─────────────────────────────────────────────────────────────────
-    const EMPTY = { title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
+    const EMPTY = { imagePath: '', title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
 
     const BeatForm = ({ beat, onClose, onSaved, adminToken, onShowToast }) => {
       const isEdit = !!beat;
@@ -515,6 +545,7 @@
         title: beat.title, genre: beat.genre, bpm: String(beat.bpm),
         key: beat.keySignature, duration: beat.duration, description: beat.description,
         price: String(beat.price), isFree: beat.isFree, inCarousel: beat.inCarousel,
+        imagePath: beat.imagePath || '',
       } : { ...EMPTY });
       const [coverFile, setCoverFile] = React.useState(null);
       const [audioFile, setAudioFile] = React.useState(null);
@@ -522,6 +553,8 @@
       const [prevImg, setPrevImg] = React.useState(isEdit ? imgSrc(beat) : null);
       const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
       const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
+      // Image choisie parmi celles du carrousel (aucun fichier à envoyer)
+      const pickGallery = name => { setCoverFile(null); set('imagePath', name); setPrevImg(`../../assets/images/${name}`); };
 
       const submit = async e => {
         e.preventDefault(); setSaving(true);
@@ -532,16 +565,27 @@
           if (audioFile) fd.append('audioFile', audioFile);
           const url = isEdit ? `${API}/${beat.id}` : API;
           const res = await fetch(url, { method: 'POST', headers: { 'X-Admin-Token': adminToken }, body: fd });
-          if (!res.ok) throw new Error(await res.text());
+          if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try {
+              const j = await res.json();
+              msg = j.error || msg;
+              if (j.details) msg += ' — ' + Object.entries(j.details).map(([k, v]) => `${k}: ${v}`).join(' · ');
+            } catch {}
+            if (res.status === 401) { clearToken(); window.location.reload(); }
+            throw new Error(msg);
+          }
           onSaved(await res.json(), isEdit);
         } catch (err) { if (onShowToast) onShowToast('Erreur : ' + err.message, true); }
         finally { setSaving(false); }
       };
 
+      // Fonction de rendu (et non composant) : un composant défini ici serait recréé à chaque frappe
+      // et ferait perdre le focus à l'input.
       const F = ({ lbl, k, type = 'text', ph = '' }) => (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
-          <label style={S.lbl}>{lbl}</label>
-          <input type={type} value={form[k]} placeholder={ph} onChange={e => set(k, e.target.value)}
+          <label htmlFor={`f-${k}`} style={S.lbl}>{lbl}</label>
+          <input id={`f-${k}`} type={type} {...(k === 'price' ? { step: '0.01', min: '0.01' } : k === 'bpm' ? { step: '1', min: '40', max: '300' } : {})} value={form[k]} placeholder={ph} onChange={e => set(k, e.target.value)}
             required={['title', 'bpm', 'key', 'duration', 'price'].includes(k)} />
         </div>
       );
@@ -558,7 +602,7 @@
               <button onClick={onClose} style={S.xbtn}>✕</button>
             </div>
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <F lbl="Titre" k="title" ph="Ex: Night Runner" />
+              {F({ lbl: "Titre", k: "title", ph: "Ex: Night Runner" })}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                   <label style={S.lbl}>Genre</label>
@@ -566,18 +610,18 @@
                     {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
-                <F lbl="BPM" k="bpm" type="number" ph="140" />
+                {F({ lbl: "BPM", k: "bpm", type: "number", ph: "140" })}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <F lbl="Tonalité" k="key" ph="Am" />
-                <F lbl="Durée" k="duration" ph="3:24" />
+                {F({ lbl: "Tonalité", k: "key", ph: "Am" })}
+                {F({ lbl: "Durée", k: "duration", ph: "3:24" })}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                 <label style={S.lbl}>Description</label>
                 <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Dark trap instrumental..." />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'end' }}>
-                <F lbl="Prix (€)" k="price" type="number" ph="29.99" />
+                {F({ lbl: "Prix (€)", k: "price", type: "number", ph: "29.99" })}
                 <Toggle checked={form.isFree} onChange={v => set('isFree', v)} label="Gratuit" />
               </div>
               <Toggle checked={form.inCarousel} onChange={v => set('inCarousel', v)} label="Afficher dans le carousel" />
@@ -593,6 +637,21 @@
                   {isEdit && beat.audioPath && !audioFile && (
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)', marginTop: 2 }}>♪ fichier existant</div>
                   )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={S.lbl}>Ou choisir une image du carousel</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} role="group" aria-label="Images du carousel">
+                  {GALLERY.map(name => {
+                    const on = !coverFile && form.imagePath === name;
+                    return (
+                      <button type="button" key={name} onClick={() => pickGallery(name)} aria-pressed={on} aria-label={`Image ${name}`}
+                        style={{ padding: 0, width: 52, height: 52, borderRadius: 6, overflow: 'hidden', cursor: 'pointer', background: 'none',
+                                 border: on ? '2px solid var(--ember-400)' : '2px solid var(--border)', opacity: on ? 1 : 0.75 }}>
+                        <img src={`../../assets/images/${name}`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div style={S.rule} />
@@ -1073,10 +1132,12 @@
 
     // ── App ──────────────────────────────────────────────────────────────────────
     const App = () => {
-      const [adminToken, setAdminToken] = React.useState(() => localStorage.getItem(STORAGE_KEY) || '');
-
+      const [adminToken, setAdminToken] = React.useState(readToken);
       if (!adminToken) return <LoginScreen onAuth={setAdminToken} />;
+      return <Dashboard adminToken={adminToken} />;
+    };
 
+    const Dashboard = ({ adminToken }) => {
       const [section, setSection] = React.useState('overview');
       const [beats, setBeats] = React.useState([]);
       const [loading, setLoading] = React.useState(true);

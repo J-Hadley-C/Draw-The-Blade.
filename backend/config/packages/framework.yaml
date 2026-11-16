@@ -2,14 +2,28 @@
 framework:
     secret: '%env(APP_SECRET)%'
 
-    # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # API sans état : pas de session.
+    session: false
 
-    #esi: true
-    #fragments: true
+    # Limitation de débit des routes publiques (clé = IP, + beat pour likes/écoutes).
+    rate_limiter:
+        contact_form:
+            policy: 'sliding_window'
+            limit: 5
+            interval: '1 hour'
+        beat_like:
+            policy: 'fixed_window'
+            limit: 1
+            interval: '1 day'
+        beat_play:
+            policy: 'fixed_window'
+            limit: 1
+            interval: '30 minutes'
+        api_global:
+            policy: 'sliding_window'
+            limit: 300
+            interval: '1 minute'
 
 when@test:
     framework:
         test: true
-        session:
-            storage_factory_id: session.storage.factory.mock_file

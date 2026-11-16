@@ -1,6 +1,32 @@
 // LicenceModal.jsx — modal de choix de licence pour un beat
-const LicenceModal = ({ beat, onClose }) => {
-  if (!beat) return null;
+const LicenceModalInner = ({ beat, onClose }) => {
+  const closeRef = React.useRef(null);
+  const dialogRef = React.useRef(null);
+
+  // Accessibilité : focus dans la fenêtre à l'ouverture, Échap pour fermer, Tab piégé dans la fenêtre,
+  // défilement de la page bloqué, focus rendu à l'élément d'origine à la fermeture.
+  React.useEffect(() => {
+    const previous = document.activeElement;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (closeRef.current) closeRef.current.focus();
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const f = dialogRef.current.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      if (previous && previous.focus) previous.focus();
+    };
+  }, []);
 
   const basePrice   = parseFloat(beat.price) || 29;
   const premiumPrice = Math.round(basePrice * 2.5 / 5) * 5;
@@ -55,7 +81,7 @@ const LicenceModal = ({ beat, onClose }) => {
 
   return (
     <div style={lm.overlay} onClick={onClose}>
-      <div style={lm.modal} onClick={e => e.stopPropagation()}>
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="lm-title" style={lm.modal} onClick={e => e.stopPropagation()}>
 
         {/* Header beat */}
         <div style={lm.header}>
@@ -63,14 +89,14 @@ const LicenceModal = ({ beat, onClose }) => {
             {beat.img && <img src={beat.img} style={lm.cover} alt="" />}
             <div>
               <div style={lm.eye}>◈ achat de licence</div>
-              <div style={lm.beatTitle}>{beat.title}</div>
+              <div id="lm-title" style={lm.beatTitle}>{beat.title}</div>
               <div style={lm.beatMeta}>
                 <span style={{ ...lm.genrePill, background: (window.GENRE_COLORS || {})[beat.genre] || '#a3161f' }}>{beat.genre}</span>
                 <span style={lm.metaDim}>{beat.bpm} BPM · {beat.key}</span>
               </div>
             </div>
           </div>
-          <button onClick={onClose} style={lm.closeBtn}>✕</button>
+          <button ref={closeRef} onClick={onClose} style={lm.closeBtn} aria-label="Fermer la fenêtre">✕</button>
         </div>
 
         <div style={lm.rule} />
@@ -166,5 +192,8 @@ const lm = {
   s.textContent = `@keyframes lm-in { from { opacity:0; transform:scale(.97) } to { opacity:1; transform:scale(1) } }`;
   document.head.appendChild(s);
 })();
+
+// Enveloppe : les hooks de LicenceModalInner ne tournent que lorsqu'un beat est sélectionné.
+const LicenceModal = (props) => (props.beat ? <LicenceModalInner {...props} /> : null);
 
 window.LicenceModal = LicenceModal;

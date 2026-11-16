@@ -110,7 +110,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
       </div>
 
       <div style={apStyles.controls}>
-        <button onClick={toggle} style={{ ...apStyles.playBtn, opacity: hasAudio ? 1 : 0.35 }} title={hasAudio ? '' : 'Audio non disponible'}>
+        <button onClick={toggle} style={{ ...apStyles.playBtn, opacity: hasAudio ? 1 : 0.35 }} title={hasAudio ? '' : 'Audio non disponible'} aria-label={playing ? 'Pause' : 'Lecture'} aria-disabled={!hasAudio}>
           {playing ? '⏸' : '▶'}
         </button>
         <div
@@ -169,7 +169,7 @@ const AudioPlayer = ({ beat, onClose, onBuy }) => {
         </button>
       </div>
 
-      <button onClick={onClose} style={apStyles.close}>✕</button>
+      <button onClick={onClose} style={apStyles.close} aria-label="Fermer le lecteur">✕</button>
     </div>
   );
 };

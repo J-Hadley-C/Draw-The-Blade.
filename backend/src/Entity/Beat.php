@@ -11,6 +11,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\HasLifecycleCallbacks]
 class Beat
 {
+    public const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -19,33 +21,39 @@ class Beat
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     #[Groups(['beat:read', 'beat:write'])]
     private string $title;
 
     #[ORM\Column(type: 'string', length: 50)]
     #[Assert\NotBlank]
+    #[Assert\Choice(choices: self::GENRES, message: 'Genre invalide.')]
     #[Groups(['beat:read', 'beat:write'])]
     private string $genre;
 
     #[ORM\Column(type: 'integer')]
-    #[Assert\Positive]
+    #[Assert\Range(min: 40, max: 300)]
     #[Groups(['beat:read', 'beat:write'])]
     private int $bpm;
 
     #[ORM\Column(type: 'string', length: 10)]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 10)]
     #[Groups(['beat:read', 'beat:write'])]
     private string $keySignature;
 
     #[ORM\Column(type: 'string', length: 20)]
+    #[Assert\Regex(pattern: '/^\d{1,3}:[0-5]\d$/', message: 'Durée attendue au format m:ss.')]
     #[Groups(['beat:read', 'beat:write'])]
     private string $duration;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\Length(max: 2000)]
     #[Groups(['beat:read', 'beat:write'])]
     private string $description;
 
     #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    #[Assert\Regex(pattern: '/^\d{1,8}(\.\d{1,2})?$/', message: 'Prix invalide.')]
     #[Assert\Positive]
     #[Groups(['beat:read', 'beat:write'])]
     private string $price;

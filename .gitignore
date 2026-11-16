@@ -1,0 +1,7 @@
+# Fichiers locaux / secrets
+.env.local
+.env.*.local
+backend/.env.local
+backend/public/uploads/beats/*
+!backend/public/uploads/beats/.gitkeep
+project/uploads/

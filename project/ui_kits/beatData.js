@@ -11,7 +11,7 @@ window.loadBeats = async function () {
     ...b,
     key: b.keySignature,
     img: b.imagePath
-      ? (/^\d+\.(png|jpg|jpeg)$/i.test(b.imagePath)
+      ? (/^(\d+\.(png|jpg|jpeg)|dojosabre\.jpg)$/i.test(b.imagePath)
           ? `../../assets/images/${b.imagePath}`
           : `${API_BASE}/uploads/beats/${b.imagePath}`)
       : '../../assets/images/1.png',
