@@ -412,6 +412,8 @@
     const API_BASE = window.APP_CONFIG.API_BASE;
     const API = `${API_BASE}/api/beats`;
     const UPLOADS = `${API_BASE}/uploads/beats`;
+    // Images déjà utilisées par le carrousel (dossier project/assets/images)
+    const GALLERY = ['1.png','2.png','3.jpg','4.png','5.jpg','6.jpg','7.jpg','8.jpg','9.jpg','10.jpg','11.jpg','12.jpg','13.jpg','14.jpg','15.png','dojosabre.jpg'];
     const GENRES = ['Trap', 'Drill', 'SexyDrill', 'BB', 'R&B', 'Afrobeat', 'Kompa'];
 
     const STORAGE_KEY = 'kf_admin_token';
@@ -493,7 +495,7 @@
 
     function imgSrc(beat) {
       if (!beat.imagePath) return null;
-      if (/^\d+\.(png|jpe?g|webp)$/i.test(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
+      if (GALLERY.includes(beat.imagePath)) return `../../assets/images/${beat.imagePath}`;
       return `${UPLOADS}/${beat.imagePath}`;
     }
 
@@ -535,7 +537,7 @@
     };
 
     // ── BeatForm ─────────────────────────────────────────────────────────────────
-    const EMPTY = { title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
+    const EMPTY = { imagePath: '', title: '', genre: 'Trap', bpm: '', key: '', duration: '', description: '', price: '', isFree: false, inCarousel: false };
 
     const BeatForm = ({ beat, onClose, onSaved, adminToken, onShowToast }) => {
       const isEdit = !!beat;
@@ -543,6 +545,7 @@
         title: beat.title, genre: beat.genre, bpm: String(beat.bpm),
         key: beat.keySignature, duration: beat.duration, description: beat.description,
         price: String(beat.price), isFree: beat.isFree, inCarousel: beat.inCarousel,
+        imagePath: beat.imagePath || '',
       } : { ...EMPTY });
       const [coverFile, setCoverFile] = React.useState(null);
       const [audioFile, setAudioFile] = React.useState(null);
@@ -550,6 +553,8 @@
       const [prevImg, setPrevImg] = React.useState(isEdit ? imgSrc(beat) : null);
       const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
       const onCover = f => { setCoverFile(f); setPrevImg(URL.createObjectURL(f)); };
+      // Image choisie parmi celles du carrousel (aucun fichier à envoyer)
+      const pickGallery = name => { setCoverFile(null); set('imagePath', name); setPrevImg(`../../assets/images/${name}`); };
 
       const submit = async e => {
         e.preventDefault(); setSaving(true);
@@ -632,6 +637,21 @@
                   {isEdit && beat.audioPath && !audioFile && (
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ember-400)', marginTop: 2 }}>♪ fichier existant</div>
                   )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={S.lbl}>Ou choisir une image du carousel</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} role="group" aria-label="Images du carousel">
+                  {GALLERY.map(name => {
+                    const on = !coverFile && form.imagePath === name;
+                    return (
+                      <button type="button" key={name} onClick={() => pickGallery(name)} aria-pressed={on} aria-label={`Image ${name}`}
+                        style={{ padding: 0, width: 52, height: 52, borderRadius: 6, overflow: 'hidden', cursor: 'pointer', background: 'none',
+                                 border: on ? '2px solid var(--ember-400)' : '2px solid var(--border)', opacity: on ? 1 : 0.75 }}>
+                        <img src={`../../assets/images/${name}`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div style={S.rule} />

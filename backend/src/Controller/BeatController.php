@@ -34,6 +34,7 @@ class BeatController extends AbstractController
         private RateLimiterFactory $beatLikeLimiter,
         private RateLimiterFactory $beatPlayLimiter,
         private string $uploadsDir,
+        private string $galleryDir,
     ) {}
 
     #[Route('', name: 'list', methods: ['GET'])]
@@ -255,6 +256,15 @@ class BeatController extends AbstractController
             $name = 'audio_' . bin2hex(random_bytes(12)) . '.' . $audioExt;
             $audio->move($this->uploadsDir, $name);
             $beat->setAudioPath($name);
+        }
+
+        // 3) Image choisie dans la galerie du carrousel (sans envoi de fichier).
+        //    Seuls les fichiers qui existent réellement dans le dossier de la galerie sont acceptés.
+        $pick = $request->request->get('imagePath');
+        if (!$cover && is_string($pick) && $pick !== '' && $pick !== $beat->getImagePath()
+            && $pick === basename($pick) && is_file($this->galleryDir . '/' . $pick)) {
+            $this->removeUpload($beat->getImagePath()); // supprime l'ancienne image envoyée (jamais une image de la galerie)
+            $beat->setImagePath($pick);
         }
 
         return null;
